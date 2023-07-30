@@ -1,0 +1,15 @@
+# Copyright (C) 2023 Ali Javaheri
+# This file is distributed under the GPLv3.
+msgid ""
+msgstr ""
+"Project-Id-Version: Woocommerce Telegram bot 1.0.1\n"
+"Report-Msgid-Bugs-To: https://github.com/alijvhr/woo-telegram-bot\n"
+"Last-Translator: Ali Javaheri <me@alijvhr.com>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: 2023-07-30T17:48:03+03:30\n"
+"X-Domain: woo-telegram-bot\n"
+
+msgid "Telegram bot"
+msgstr "بات تلگرام"

@@ -8,6 +8,8 @@ class Initializer extends Singleton
 
     function init()
     {
+        $path = dirname(plugin_basename(__FILE__), 2);
+        load_plugin_textdomain('woo-telegram-bot', false, "$path/languages/");
         $active_plugins = apply_filters('active_plugins', get_option('active_plugins'));
 
         if (in_array('woocommerce/woocommerce.php', $active_plugins)) {
@@ -25,13 +27,13 @@ class Initializer extends Singleton
 
     function woocommerceNotice()
     {
-        $message = __('Please activate woocommerce on your wp installation in order to use Woocommerce Telegram Bot plugin');
+        $message = __('Please activate woocommerce on your wp installation in order to use Woocommerce Telegram Bot plugin', 'woo-telegram-bot');
         echo "<div class=\"notice notice-error\"><p>$message</p></div>";
     }
 
     function add_action_links($actions)
     {
-        $configure = __('Configure');
+        $configure = __('Configure', 'woo-telegram-bot');
         $url = admin_url('admin.php?page=wc-settings&tab=wootb');
         $actions[] = "<a href=\"$url\">$configure</a>";
         return $actions;
@@ -69,7 +71,7 @@ class Initializer extends Singleton
     {
         try {
             $this->telegram->sendMessage(self::getTemplate());
-            echo json_encode(['error' => 0, 'message' => __('پیام ارسال شد!')]);
+            echo json_encode(['error' => 0, 'message' => __('پیام ارسال شد!', 'woo-telegram-bot')]);
             wp_die();
         } catch (\Exception $ex) {
             echo json_encode(['error' => 1, 'message' => $ex->getMessage()]);

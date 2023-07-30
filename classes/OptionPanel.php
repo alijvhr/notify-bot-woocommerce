@@ -17,7 +17,7 @@ class OptionPanel extends \WC_Settings_Page
 
     public function add_settings_tab($settings_tabs)
     {
-        $settings_tabs[$this->id] = __('اطلاع رسانی ربات تلگرام');
+        $settings_tabs[$this->id] = __('Telegram bot', 'woo-telegram-bot');
 
         return $settings_tabs;
     }
@@ -33,44 +33,44 @@ class OptionPanel extends \WC_Settings_Page
     {
         $settings = array(
             'section_title_1' => array(
-                'name' => __('راهنما'),
+                'name' => __('راهنما', 'woo-telegram-bot'),
                 'type' => 'title',
                 'desc' => $this->renderHelpDescription(),
                 'id' => 'wc_settings_tab_wootb_title_1'
             ),
             'token' => array(
-                'name' => __('توکن ربات'),
+                'name' => __('توکن ربات', 'woo-telegram-bot'),
                 'type' => 'text',
                 'id' => 'wootb_setting_token',
                 'desc_tip' => true,
-                'desc' => __('توکن ربات را وارد کنید')
+                'desc' => __('توکن ربات را وارد کنید', 'woo-telegram-bot')
             ),
             'chatid' => array(
-                'name' => __('آیدی چت یا گروه'),
+                'name' => __('آیدی چت یا گروه', 'woo-telegram-bot'),
                 'type' => 'text',
                 'id' => 'wootb_setting_chatid',
                 'desc_tip' => true,
-                'desc' => __('آیدی چت یا گروه را وارد کنید، برای اطلاعات بیشتر به ربات تلگرامی @UserAccInfoBot مراجعه نمایید')
+                'desc' => __('آیدی چت یا گروه را وارد کنید، برای اطلاعات بیشتر به ربات تلگرامی @UserAccInfoBot مراجعه نمایید', 'woo-telegram-bot')
             ),
             'sending_after_order_status_changed' => array(
-                'name' => __('ارسال نوتیفیکشن با تغییر وضعیت'),
+                'name' => __('ارسال نوتیفیکشن با تغییر وضعیت', 'woo-telegram-bot'),
                 'type' => 'checkbox',
                 'id' => 'wootb_send_after_order_status_changed',
                 'desc_tip' => true,
                 'desc' => __("براساس وضعیت های انتخابی هنگام ثبت سفارش نوتیفیکیشن ارسال می شود. در غیر اینصورت برای همه وضعیت ها نوتیفیکیشن ارسال می شود.")
             ),
             'order_statuses' => array(
-                'name' => __('انتخاب وضعیت های سفارش'),
+                'name' => __('انتخاب وضعیت های سفارش', 'woo-telegram-bot'),
                 'type' => 'multiselect',
                 'id' => 'wootb_order_statuses',
                 'options' => wc_get_order_statuses(),
                 'class' => 'wc-enhanced-select',
                 'desc_tip' => true,
                 'css' => 'width:45%;',
-                'desc' => __('وضعیت هایی که برایشان نوتیفیکیشن ارسال می شود')
+                'desc' => __('وضعیت هایی که برایشان نوتیفیکیشن ارسال می شود', 'woo-telegram-bot')
             ),
             'message_template' => array(
-                'name' => __('نمونه پیام ارسالی'),
+                'name' => __('نمونه پیام ارسالی', 'woo-telegram-bot'),
                 'type' => 'textarea',
                 'id' => 'wootb_setting_template',
                 'class' => 'code',
@@ -93,7 +93,7 @@ class OptionPanel extends \WC_Settings_Page
 
         $chatid_help = wp_kses(__("برای دریافت آیدی تان نیز از ربات <a href='https://t.me/UserAccInfoBot' target='_blank'>@UserAccInfoBot</a> استفاده کنید. راهنمایی های بیشتر و نحوه بدست آوردن آیدی چت یا گروه در این ربات وجود دارد.", "wootb"), ['a' => ['href' => 'https://t.me/UserAccInfoBot', 'target' => '_blank'], 'code' => []]);
 
-        return $token_help . chr(10) . $chatid_help . chr(10) . $more_info;
+        return $chatid_help . chr(10);
     }
 
     public function renderAllowTagsDescription()
@@ -117,14 +117,14 @@ class OptionPanel extends \WC_Settings_Page
             <table class="form-table">
                 <tbody>
                 <tr>
-                    <th><?php echo __('ارسال پیام تستی') ?></th>
+                    <th><?php echo __('ارسال پیام تستی', 'woo-telegram-bot') ?></th>
                     <td>
                         <button id="wootb_send_test_message" type="button"
-                                class="button-primary"><?= __('ارسال پیام') ?></button>
+                                class="button-primary"><?= __('ارسال پیام', 'woo-telegram-bot') ?></button>
                     </td>
                 </tr>
                 <tr>
-                    <th><?php echo __('تگ های مجاز') ?></th>
+                    <th><?php echo __('تگ های مجاز', 'woo-telegram-bot') ?></th>
                     <td>
                         <div class="text-right" style="text-align: right;">
                             <pre>&ltb&gtbold&lt/b&gt</pre>
@@ -144,7 +144,7 @@ class OptionPanel extends \WC_Settings_Page
                     </td>
                 </tr>
                 <tr>
-                    <th><?php echo __('شورت کد های قابل استفاده') ?></th>
+                    <th><?php echo __('شورت کد های قابل استفاده', 'woo-telegram-bot') ?></th>
                     <td>
                         <div>
                             <p>نام وبسایت: <code>{site_name}</code></p>
