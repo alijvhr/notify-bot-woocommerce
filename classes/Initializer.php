@@ -4,6 +4,7 @@ namespace WoocommerceTelegramBot\classes;
 
 class Initializer extends Singleton
 {
+    /**@var TelegramAdaptor */
     public $telegram;
 
     function init()
@@ -46,7 +47,7 @@ class Initializer extends Singleton
         add_action('wp_ajax_wootb_send_test_message', [$this, 'sendTestMessage']);
         add_filter('woocommerce_get_settings_pages', array($this, 'addWooSettingSection'));
         add_action('admin_enqueue_scripts', array($this, 'admin_enqueue_script'));
-
+        add_action('rest_api_init', array($this, 'rest_routes'));
         $order_status_changed_enabled = get_option('wootb_send_after_order_status_changed', false);
         if ($order_status_changed_enabled == 'yes') {
             add_action('woocommerce_order_status_changed', array($this, 'woocommerce_order_status_changed'), 20, 4);
@@ -57,9 +58,23 @@ class Initializer extends Singleton
 
     private function initTelegramApi()
     {
-        $this->telegram = new TelegramAdaptor();
-        $this->telegram->chatID = get_option('wootb_setting_chatid');
-        $this->telegram->token = get_option('wootb_setting_token');
+        $this->telegram = new TelegramAdaptor(get_option('wootb_setting_token'));
+
+    }
+
+    public function rest_routes()
+    {
+        register_rest_route('wootb/telegram', "/hook", [
+            [
+                'methods' => \WP_REST_Server::ALLMETHODS,
+                'callback' => [
+                    $this,
+                    'telegramHook'
+                ],
+                'permission_callback' => '__return_true',
+                'args' => []
+            ]
+        ]);
     }
 
     function admin_enqueue_script()
@@ -106,19 +121,35 @@ class Initializer extends Singleton
 
     public function woocommerce_new_order($order_id)
     {
-        $wasSent = get_post_meta($order_id, 'telegramWasSent', true);
-        if (!$wasSent) {
-            update_post_meta($order_id, 'telegramWasSent', 1);
-            $this->sendNewOrderToTelegram($order_id);
-        }
-
+        $this->sendUpdateToBot($order_id);
     }
 
-    public function sendNewOrderToTelegram($orderID)
+    public function sendUpdateToBot($orderID)
     {
         $wc = new WooCommerceAdaptor($orderID);
-        $message = $wc->getBillingDetails(self::getTemplate());
-        $this->telegram->sendMessage($message);
+        $text = $wc->interpolate(self::getTemplate());
+        $chatIds = explode(',', get_option('wootb_setting_chatid'));
+        $messageIds = json_decode(get_post_meta($orderID, 'telegramMessageIds', true) ?: "[]", true);
+        $keyboard = [
+            "inline_keyboard" => [
+                [
+                    ["text" => __('Completed', 'woo-telegram-bot'), "callback_data" => '{"id":"' . $orderID . '","status":"completed"}'],
+                    ["text" => __('Refunded', 'woo-telegram-bot'), "callback_data" => '{"id":"' . $orderID . '","status":"refunded"}']
+                ]
+            ]
+        ];
+        foreach ($chatIds as $chatId) {
+            do {
+                if (isset($messageIds[$chatId])) {
+                    $message = $this->telegram->updateMessage($chatId, $messageIds[$chatId], $text, $keyboard);
+                } else {
+                    $message = $this->telegram->sendMessage($chatId, $text, $keyboard);
+                }
+            } while (!isset($message->result) && sleep(2) !== false);
+            $messageIds[$chatId] = $message->result->message_id;
+        }
+        update_post_meta($orderID, 'telegramMessageIds', json_encode($messageIds));
+        return $messageIds;
     }
 
     public function woocommerce_order_status_changed($order_id, $status_transition_from, $status_transition_to, $that)
@@ -126,14 +157,26 @@ class Initializer extends Singleton
         $order = wc_get_order($order_id);
         $statuses = get_option('wootb_order_statuses');
         if (in_array('wc-' . $order->get_status(), $statuses)) {
-            $this->sendNewOrderToTelegram($order->data['id']);
+            $this->sendUpdateToBot($order->get_id());
         }
     }
 
     public function addWooSettingSection($settings)
     {
-        $settings[] = new OptionPanel();
+        $settings[] = new OptionPanel($this->telegram);
 
         return $settings;
+    }
+
+    public function telegramHook()
+    {
+        $this->telegram = new TelegramAdaptor(get_option('wootb_setting_token'));
+
+        $chatIds = explode(',', get_option('wootb_setting_chatid'));
+        $object = json_decode(\WP_REST_Server::get_raw_data());
+        if (isset($object->callback_query))
+            $this->telegram->callback($object->callback_query->id, 'how are you!');
+
+        return new \WP_REST_Response($object, 200);
     }
 }

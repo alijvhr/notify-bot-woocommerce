@@ -5,14 +5,19 @@ namespace WoocommerceTelegramBot\classes;
 class OptionPanel extends \WC_Settings_Page
 {
 
-    public function __construct()
+    /**
+     * @var TelegramAdaptor
+     */
+    private $telegram;
+
+    public function __construct($telegram)
     {
         parent::__construct();
         $this->id = 'wootb';
         add_filter('woocommerce_settings_tabs_array', array($this, 'add_settings_tab'), 50);
         add_action('woocommerce_settings_' . $this->id, array($this, 'output'));
         add_action('woocommerce_settings_save_' . $this->id, array($this, 'save'));
-
+        $this->telegram = $telegram;
     }
 
     public function add_settings_tab($settings_tabs)
@@ -31,35 +36,35 @@ class OptionPanel extends \WC_Settings_Page
 
     public function get_settings($section = null)
     {
-        $settings = array(
-            'section_title_1' => array(
+        $settings = [
+            'section_title_1' => [
                 'name' => __('راهنما', 'woo-telegram-bot'),
                 'type' => 'title',
                 'desc' => $this->renderHelpDescription(),
                 'id' => 'wc_settings_tab_wootb_title_1'
-            ),
-            'token' => array(
+            ],
+            'token' => [
                 'name' => __('توکن ربات', 'woo-telegram-bot'),
                 'type' => 'text',
                 'id' => 'wootb_setting_token',
                 'desc_tip' => true,
                 'desc' => __('توکن ربات را وارد کنید', 'woo-telegram-bot')
-            ),
-            'chatid' => array(
+            ],
+            'chatid' => [
                 'name' => __('آیدی چت یا گروه', 'woo-telegram-bot'),
                 'type' => 'text',
                 'id' => 'wootb_setting_chatid',
                 'desc_tip' => true,
                 'desc' => __('آیدی چت یا گروه را وارد کنید، برای اطلاعات بیشتر به ربات تلگرامی @UserAccInfoBot مراجعه نمایید', 'woo-telegram-bot')
-            ),
-            'sending_after_order_status_changed' => array(
+            ],
+            'sending_after_order_status_changed' => [
                 'name' => __('ارسال نوتیفیکشن با تغییر وضعیت', 'woo-telegram-bot'),
                 'type' => 'checkbox',
                 'id' => 'wootb_send_after_order_status_changed',
                 'desc_tip' => true,
                 'desc' => __("براساس وضعیت های انتخابی هنگام ثبت سفارش نوتیفیکیشن ارسال می شود. در غیر اینصورت برای همه وضعیت ها نوتیفیکیشن ارسال می شود.")
-            ),
-            'order_statuses' => array(
+            ],
+            'order_statuses' => [
                 'name' => __('انتخاب وضعیت های سفارش', 'woo-telegram-bot'),
                 'type' => 'multiselect',
                 'id' => 'wootb_order_statuses',
@@ -68,8 +73,8 @@ class OptionPanel extends \WC_Settings_Page
                 'desc_tip' => true,
                 'css' => 'width:45%;',
                 'desc' => __('وضعیت هایی که برایشان نوتیفیکیشن ارسال می شود', 'woo-telegram-bot')
-            ),
-            'message_template' => array(
+            ],
+            'message_template' => [
                 'name' => __('نمونه پیام ارسالی', 'woo-telegram-bot'),
                 'type' => 'textarea',
                 'id' => 'wootb_setting_template',
@@ -77,12 +82,12 @@ class OptionPanel extends \WC_Settings_Page
                 'css' => 'max-width:550px;width:100%;',
                 'default' => include(dirname(__DIR__) . "/default-msg.php"),
                 'custom_attributes' => ['rows' => 10],
-            ),
-            'section_end' => array(
+            ],
+            'section_end' => [
                 'type' => 'sectionend',
                 'id' => 'wc_settings_tab_wootb_end_section_2'
-            ),
-        );
+            ],
+        ];
 
         return apply_filters('wc_settings_tab_wootb_settings', $settings, $section);
 
@@ -186,6 +191,7 @@ class OptionPanel extends \WC_Settings_Page
     public function save()
     {
         $settings = $this->get_settings();
+        $this->telegram->setWebhook(site_url("/wp-json/wootb/telegram/hook"));
         \WC_Admin_Settings::save_fields($settings);
     }
 }

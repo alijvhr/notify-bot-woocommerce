@@ -23,7 +23,7 @@ class WooCommerceAdaptor
 
     }
 
-    public function getBillingDetails($str)
+    public function interpolate($str)
     {
         $this->decodeShortcode($str);
         $pr = $this->getProducts();
@@ -97,7 +97,7 @@ class WooCommerceAdaptor
         $replace['{customer_order_count}'] = $this->wcGetCustomerOrderCount();
         $replace['{order_status}'] = wc_get_order_status_name($this->order->get_status());
         $replace['{order_notes}'] = $this->order->get_customer_note();
-        $replace['{order_icon}'] = ['processing' => '⏰', 'completed' => '❇', 'cancelled' => '❌'][$this->order->get_status()];
+        $replace['{order_icon}'] = ['processing' => '⏰', 'completed' => '✅', 'cancelled' => '❌'][$this->order->get_status()];
         $replace['{total}'] = wc_price($this->order->get_total());
         $date = $this->order->get_date_created()->date(get_option('links_updated_date_format'));
         $replace['{order_date_created}'] = $date;

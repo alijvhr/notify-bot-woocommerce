@@ -2,53 +2,72 @@
 
 namespace WoocommerceTelegramBot\classes;
 
-class TelegramAdaptor {
+class TelegramAdaptor
+{
 
-	public $chatID;
-	public $token;
-	public $parseMode;
-	public $accessTags;
+    private $tel_url = 'https://tlbot.devnow.ir';
+    /**
+     * @var string
+     */
+    private $token = '';
+    /**
+     * @var string
+     */
+    private $accessTags = '<b><strong><i><u><em><ins><s><strike><del><a><code><pre>';
 
-	public function __construct() {
-		$this->chatID     = '';
-		$this->token      = '';
-		$this->parseMode  = 'HTML';
-		$this->accessTags = '<b><strong><i><u><em><ins><s><strike><del><a><code><pre>';
-	}
+    private $reqUrl = '';
 
-	public function sendMessage( $text ) {
-		$text = strip_tags( $text, $this->accessTags );
+    public function __construct($token)
+    {
+        $this->token = $token;
+    }
 
-		$chatIds = explode( ',', $this->chatID );
+    public function sendMessage($chatId, $text, $keyboard = null)
+    {
+        $data = $this->prepare($chatId, $text, $keyboard);
+        return $this->request('sendMessage', $data);
+    }
 
-		if ( is_array( $chatIds ) && count( $chatIds ) > 1 ) {
-			foreach ( $chatIds as $chatId ) {
-				$this->request( $chatId, $text );
-			}
-		} else {
-			$this->request( $this->chatID, $text );
-		}
-	}
+    public function prepare($chatId, $text, $keyboard = null): array
+    {
+        $text = strip_tags($text, $this->accessTags);
+        $data = ['chat_id' => $chatId, 'text' => $text, 'caption' => $text, 'allow_sending_without_reply' => true, 'parse_mode' => 'HTML'];
+        if ($keyboard ?? 0) {
+            $data['reply_markup'] = json_encode($keyboard);
+        }
+        return $data;
+    }
 
-	private function request( $chatId, $text ) {
-		$data = [
-			'chat_id'    => $chatId,
-			'text'       => stripcslashes( html_entity_decode( $text ) ),
-			'parse_mode' => $this->parseMode,
-        ];
+    private function request($method, $data = [])
+    {
+        if (!$this->reqUrl) {
+            $this->reqUrl = "$this->tel_url/bot$this->token";
+        }
+        $data = http_build_query($data);
 
-        $data=http_build_query($data);
+        return json_decode(file_get_contents("$this->reqUrl/$method?$data"));
+    }
 
-        $return = wp_remote_get( "https://tlbot.devnow.ir/bot$this->token/sendMessage?$data", [
-            'timeout'     => 5,
-            'redirection' => 5,
-            'blocking'    => false
-        ]);
+    public function updateMessage($chatId, $message_id, $text, $keyboard = null)
+    {
+        $data = $this->prepare($chatId, $text, $keyboard);
+        $data['message_id'] = $message_id;
+        return $this->request('editMessageText', $data);
+    }
 
-		if ( is_wp_error( $return ) ) {
-			return json_encode( [ 'ok' => false, 'curl_error_code' => $return->get_error_message() ] );
-		} else {
-			return json_decode( $return['body'], true );
-		}
-	}
+    public function callback($callbackQueryId, $text)
+    {
+        $data = ['callback_query_id' => $callbackQueryId, 'text' => $text];
+        return $this->request('answerCallbackQuery', $data);
+    }
+
+    public function setWebhook($url)
+    {
+        return $this->request('setWebhook', ['url' => $url]);
+    }
+
+    public function getWebhookInfo()
+    {
+        return $this->request('getWebhookInfo');
+    }
 }
