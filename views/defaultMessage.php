@@ -1,6 +1,4 @@
-<?php
-return
-    '{order_icon}وضعیت: <b><u>{order_status}</u></b>
+{order_icon}وضعیت: <b><u>{order_status}</u></b>
 #order_{order_id}
 شماره سفارش: <b><a href="{site_url}/wp-admin/post.php?post={order_id}&amp;action=edit">{order_id}</a></b>
 🗓 زمان ثبت سفارش: {order_date_created_per}
@@ -13,4 +11,4 @@ return
 تلفن: {billing_phone}
 کدپستی: {billing_postcode}
 توضیحات: {order_notes}
-روش ارسال: {shipping_method_title}';
+روش ارسال: {shipping_method_title}

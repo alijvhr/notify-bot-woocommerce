@@ -2,181 +2,238 @@
 
 namespace WoocommerceTelegramBot\classes;
 
-class Initializer extends Singleton
-{
-    /**@var TelegramAdaptor */
-    public $telegram;
+use Safe\Exceptions\VarException;
 
-    function init()
-    {
-        $path = dirname(plugin_basename(__FILE__), 2);
-        load_plugin_textdomain('woo-telegram-bot', false, "$path/languages/");
-        $active_plugins = apply_filters('active_plugins', get_option('active_plugins'));
+class Initializer extends Singleton {
+	/**@var TelegramAdaptor */
+	public $telegram;
 
-        if (in_array('woocommerce/woocommerce.php', $active_plugins)) {
-            $this->run();
-        } else {
-            add_action('admin_notices', [$this, 'woocommerceNotice']);
-        }
-    }
+	protected $queue = [];
 
-    private function run()
-    {
-        add_action('plugins_loaded', [$this, 'loadHooks'], 26);
-        add_filter('plugin_action_links_WoocommerceTelegramBot/WoocommerceTelegramBot.php', [$this, 'add_action_links']);
-    }
+	function init() {
+		$path = dirname( plugin_basename( __FILE__ ), 2 );
+		load_plugin_textdomain( 'woo-telegram-bot', false, "$path/languages/" );
+		$active_plugins = apply_filters( 'active_plugins', get_option( 'active_plugins' ) );
 
-    function woocommerceNotice()
-    {
-        $message = __('Please activate woocommerce on your wp installation in order to use Woocommerce Telegram Bot plugin', 'woo-telegram-bot');
-        echo "<div class=\"notice notice-error\"><p>$message</p></div>";
-    }
+		if ( in_array( 'woocommerce/woocommerce.php', $active_plugins ) ) {
+			$this->run();
+		} else {
+			add_action( 'admin_notices', [ $this, 'woocommerceNotice' ] );
+		}
+	}
 
-    function add_action_links($actions)
-    {
-        $configure = __('Configure', 'woo-telegram-bot');
-        $url = admin_url('admin.php?page=wc-settings&tab=wootb');
-        $actions[] = "<a href=\"$url\">$configure</a>";
-        return $actions;
-    }
+	private function run() {
+		add_action( 'plugins_loaded', [ $this, 'loadHooks' ], 26 );
+		add_filter( 'plugin_action_links_WoocommerceTelegramBot/WoocommerceTelegramBot.php', [
+			$this,
+			'add_action_links'
+		] );
+	}
 
+	function woocommerceNotice() {
+		$message = __( 'Please activate woocommerce on your wp installation in order to use Woocommerce Telegram Bot plugin', 'woo-telegram-bot' );
+		echo "<div class=\"notice notice-error\"><p>$message</p></div>";
+	}
 
-    function loadHooks()
-    {
-        $this->initTelegramApi();
-        add_action('wp_ajax_wootb_send_test_message', [$this, 'sendTestMessage']);
-        add_filter('woocommerce_get_settings_pages', array($this, 'addWooSettingSection'));
-        add_action('admin_enqueue_scripts', array($this, 'admin_enqueue_script'));
-        add_action('rest_api_init', array($this, 'rest_routes'));
-        $order_status_changed_enabled = get_option('wootb_send_after_order_status_changed', false);
-        if ($order_status_changed_enabled == 'yes') {
-            add_action('woocommerce_order_status_changed', array($this, 'woocommerce_order_status_changed'), 20, 4);
-        } else {
-            add_action('woocommerce_checkout_order_processed', array($this, 'woocommerce_new_order'));
-        }
-    }
+	function add_action_links( $actions ) {
+		$configure = __( 'Configure', 'woo-telegram-bot' );
+		$url       = admin_url( 'admin.php?page=wc-settings&tab=wootb' );
+		$actions[] = "<a href=\"$url\">$configure</a>";
 
-    private function initTelegramApi()
-    {
-        $this->telegram = new TelegramAdaptor(get_option('wootb_setting_token'));
+		return $actions;
+	}
 
-    }
+	function loadHooks() {
+		$this->initTelegramBot();
+		add_action( 'wp_ajax_wootb_send_test_message', [ $this, 'sendTestMessage' ] );
+		add_filter( 'woocommerce_get_settings_pages', [ $this, 'addWooSettingSection' ] );
+		add_action( 'admin_enqueue_scripts', [ $this, 'admin_enqueue_script' ] );
+		add_action( 'save_post_shop_order', [ $this, 'woocommerce_new_order' ] );
+		add_action( 'save_post_shop_order', [ $this, 'sendUpdatesToBot' ] );
+		add_action( 'woocommerce_checkout_order_processed', [ $this, 'woocommerce_new_order' ] );
+		add_action( 'woocommerce_checkout_order_processed', [ $this, 'sendUpdatesToBot' ] );
+		add_action( 'woocommerce_order_status_changed', [ $this, 'woocommerce_new_order' ] );
+		add_action( 'woocommerce_order_status_changed', [ $this, 'sendUpdatesToBot' ] );
+//		add_action( 'init', [ $this, 'schedule_events' ] );
+		add_filter( 'cron_schedules', [ $this, 'add_minute_cron' ] );
+	}
 
-    public function rest_routes()
-    {
-        register_rest_route('wootb/telegram', "/hook", [
-            [
-                'methods' => \WP_REST_Server::ALLMETHODS,
-                'callback' => [
-                    $this,
-                    'telegramHook'
-                ],
-                'permission_callback' => '__return_true',
-                'args' => []
-            ]
-        ]);
-    }
+	private function initTelegramBot() {
+		$this->telegram = new TelegramAdaptor( get_option( 'wootb_setting_token' ) );
+		$use_proxy      = get_option( 'wootb_use_proxy' );
+		$this->telegram->use_proxy( $use_proxy );
+		TelegramAPI::getInstance()->setAdaptor( $this->telegram );
+	}
 
-    function admin_enqueue_script()
-    {
-        wp_enqueue_script('wootb', plugin_dir_url(__FILE__) . '../assets/js/admin.js', array('jquery'), '1.5', true);
-    }
+	public function schedule_events() {
+		if ( ! wp_next_scheduled( 'wootb_send_updates' ) ) {
+			wp_schedule_event( time(), 'hourly', 'wootb_send_updates' );
+		}
+	}
 
-    function sendTestMessage()
-    {
-        try {
-            $this->telegram->sendMessage(self::getTemplate());
-            echo json_encode(['error' => 0, 'message' => __('پیام ارسال شد!', 'woo-telegram-bot')]);
-            wp_die();
-        } catch (\Exception $ex) {
-            echo json_encode(['error' => 1, 'message' => $ex->getMessage()]);
-            wp_die();
-        }
-    }
+	function add_minute_cron( $schedules ) {
+		if ( ! isset( $schedules['every_minute'] ) ) {
+			$schedules['every_minute'] = [
+				'interval' => 60,
+				'display'  => __( 'Every 1 Minute', 'woo-telegram-bot' ),
+			];
+		}
 
-    private static function getTemplate()
-    {
-        return str_replace([
-            "billing_first_name",
-            "billing_last_name",
-            "billing_address_1",
-            "billing_address_2",
-            "billing_city",
-            "billing_state",
-            "billing_postcode",
-            "billing_email",
-            "billing_phone"
-        ], [
-            "billing-first_name",
-            "billing-last_name",
-            "billing-address_1",
-            "billing-address_2",
-            "billing-city",
-            "billing-state",
-            "billing-postcode",
-            "billing-email",
-            "billing-phone"
-        ], get_option('wootb_setting_template'));
-    }
+		return $schedules;
+	}
 
-    public function woocommerce_new_order($order_id)
-    {
-        $this->sendUpdateToBot($order_id);
-    }
+	function admin_enqueue_script() {
+		wp_enqueue_script( 'wootb', plugin_dir_url( __FILE__ ) . '../assets/js/admin.js', array( 'jquery' ), '1.5', true );
+	}
 
-    public function sendUpdateToBot($orderID)
-    {
-        $wc = new WooCommerceAdaptor($orderID);
-        $text = $wc->interpolate(self::getTemplate());
-        $chatIds = explode(',', get_option('wootb_setting_chatid'));
-        $messageIds = json_decode(get_post_meta($orderID, 'telegramMessageIds', true) ?: "[]", true);
-        $keyboard = [
-            "inline_keyboard" => [
-                [
-                    ["text" => __('Completed', 'woo-telegram-bot'), "callback_data" => '{"id":"' . $orderID . '","status":"completed"}'],
-                    ["text" => __('Refunded', 'woo-telegram-bot'), "callback_data" => '{"id":"' . $orderID . '","status":"refunded"}']
-                ]
-            ]
-        ];
-        foreach ($chatIds as $chatId) {
-            do {
-                if (isset($messageIds[$chatId])) {
-                    $message = $this->telegram->updateMessage($chatId, $messageIds[$chatId], $text, $keyboard);
-                } else {
-                    $message = $this->telegram->sendMessage($chatId, $text, $keyboard);
-                }
-            } while (!isset($message->result) && sleep(2) !== false);
-            $messageIds[$chatId] = $message->result->message_id;
-        }
-        update_post_meta($orderID, 'telegramMessageIds', json_encode($messageIds));
-        return $messageIds;
-    }
+	function sendTestMessage() {
+		try {
+			$this->sendToAll( [], __( 'This is a test message from Woocommerce telegram bot Plugin!', 'woo-telegram-bot' ) );
+			echo json_encode( [ 'error' => 0, 'message' => __( 'Message successfully sent', 'woo-telegram-bot' ) ] );
+			wp_die();
+		} catch ( \Exception $ex ) {
+			echo json_encode( [ 'error' => 1, 'message' => $ex->getMessage() ] );
+			wp_die();
+		}
+	}
 
-    public function woocommerce_order_status_changed($order_id, $status_transition_from, $status_transition_to, $that)
-    {
-        $order = wc_get_order($order_id);
-        $statuses = get_option('wootb_order_statuses');
-        if (in_array('wc-' . $order->get_status(), $statuses)) {
-            $this->sendUpdateToBot($order->get_id());
-        }
-    }
+	public function sendToAll( $messageIds, $text, $keyboard = null ) {
+		$chatIds = explode( ',', get_option( 'wootb_setting_chatid' ) );
+		foreach ( $chatIds as $chatId ) {
+			$tries = $message = 0;
+			do {
+				try {
+					if ( isset( $messageIds[ $chatId ] ) ) {
+						$message = $this->telegram->updateMessage( $chatId, $messageIds[ $chatId ], $text, $keyboard );
+					} else {
+						$message = $this->telegram->sendMessage( $chatId, $text, $keyboard );
+					}
+				} catch ( \Exception $e ) {
 
-    public function addWooSettingSection($settings)
-    {
-        $settings[] = new OptionPanel($this->telegram);
+				}
+			} while ( ! isset( $message->ok ) && sleep( 1 ) !== false && $tries ++ < 5 );
+			if ( isset( $message->result->message_id ) ) {
+				$messageIds[ $chatId ] = $message->result->message_id;
+			}
+		}
 
-        return $settings;
-    }
+		return $messageIds;
+	}
 
-    public function telegramHook()
-    {
-        $this->telegram = new TelegramAdaptor(get_option('wootb_setting_token'));
+	public function woocommerce_new_order( $order_id ) {
+		$this->addToUpdateQueue( $order_id );
+	}
 
-        $chatIds = explode(',', get_option('wootb_setting_chatid'));
-        $object = json_decode(\WP_REST_Server::get_raw_data());
-        if (isset($object->callback_query))
-            $this->telegram->callback($object->callback_query->id, 'how are you!');
+	public function addToUpdateQueue( $order_id ) {
+		$this->get_queue();
+		if ( ! in_array( $order_id, $this->queue ) ) {
+			$this->queue[] = $order_id;
+		}
+	}
 
-        return new \WP_REST_Response($object, 200);
-    }
+	public function get_queue() {
+		if ( ! isset( $this->queue ) ) {
+			$this->queue = json_decode( get_option( 'wootb_send_queue', "[]" ), true );
+		}
+
+		return $this->queue;
+	}
+
+	public function set_queue() {
+		$this->queue = array_values( $this->queue );
+		update_option( 'wootb_send_queue', json_encode( $this->queue ) );
+	}
+
+	public function deactivate() {
+		$this->unschedule_events();
+	}
+
+	public function unschedule_events() {
+		$timestamp = wp_next_scheduled( 'wootb_send_updates' );
+		wp_unschedule_event( $timestamp, 'wootb_send_updates' );
+	}
+
+	public function sendUpdatesToBot() {
+		$this->queue = $this->get_queue();
+		$chatIds     = explode( ',', get_option( 'wootb_setting_chatid' ) );
+		$chatCount   = count( $chatIds );
+		foreach ( $this->queue as $key => $order_id ) {
+			$sentCount = count( $this->sendUpdateToBot( $order_id ) );
+			if ( $chatCount == $sentCount ) {
+				unset( $this->queue[ $key ] );
+			}
+		}
+		$this->set_queue();
+
+	}
+
+	public function sendUpdateToBot( $order_id ) {
+		$wc         = new WooCommerceAdaptor( $order_id );
+		$text       = $wc->interpolate( self::getTemplate() );
+		$messageIds = json_decode( get_post_meta( $order_id, 'WooTelegramMessageIds', true ) ?: "[]", true );
+		$status     = $wc->get_status();
+		$keyboard   = new TelegramKeyboard( 2 );
+		if ( $status != 'completed' ) {
+			$keyboard->add_inline_callback_button( '✅ ' . __( 'Complete', 'woo-telegram-bot' ), [
+				"cmd" => "status",
+				"oid" => $order_id,
+				"st"  => 0
+			] );
+		}
+		if ( $status != 'refunded' ) {
+			$keyboard->add_inline_callback_button( '💸 ' . __( 'Refund', 'woo-telegram-bot' ), [
+				"cmd" => "status",
+				"oid" => $order_id,
+				"st"  => 1
+			] );
+		}
+		if ( $status != 'processing' ) {
+			$keyboard->add_inline_callback_button( '🕙 ' . __( 'Process', 'woo-telegram-bot' ), [
+				"cmd" => "status",
+				"oid" => $order_id,
+				"st"  => 2
+			] );
+		}
+		if ( $status != 'cancelled' ) {
+			$keyboard->add_inline_callback_button( '❌ ' . __( 'Cancel', 'woo-telegram-bot' ), [
+				"cmd" => "status",
+				"oid" => $order_id,
+				"st"  => 3
+			] );
+		}
+		$messageIds = $this->sendToAll( $messageIds, $text, $keyboard );
+		update_post_meta( $order_id, 'WooTelegramMessageIds', json_encode( $messageIds ) );
+
+		return $messageIds;
+	}
+
+	private static function getTemplate() {
+		return str_replace( [
+			"billing_first_name",
+			"billing_last_name",
+			"billing_address_1",
+			"billing_address_2",
+			"billing_city",
+			"billing_state",
+			"billing_postcode",
+			"billing_email",
+			"billing_phone"
+		], [
+			"billing-first_name",
+			"billing-last_name",
+			"billing-address_1",
+			"billing-address_2",
+			"billing-city",
+			"billing-state",
+			"billing-postcode",
+			"billing-email",
+			"billing-phone"
+		], get_option( 'wootb_setting_template' ) );
+	}
+
+	public function addWooSettingSection( $settings ) {
+		$settings[] = new OptionPanel( $this->telegram );
+
+		return $settings;
+	}
 }
