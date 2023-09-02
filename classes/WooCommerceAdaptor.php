@@ -61,7 +61,8 @@ class WooCommerceAdaptor {
 	}
 
 	function extra_detail( $replace ) {
-		$date = $this->order->get_date_created()->date( get_option( 'links_updated_date_format' ) );
+		$date = $this->order->get_date_created() ?? $this->order->get_date_modified();
+		$date = isset( $date ) ? $date->date( get_option( 'links_updated_date_format' ) ) : '-';
 
 		$replace['order.id']               = $this->order_id;
 		$replace['customer.id']            = $this->order->get_user_id();
