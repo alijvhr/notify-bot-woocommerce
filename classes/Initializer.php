@@ -8,6 +8,7 @@ class Initializer extends Singleton {
 	/**@var TelegramAdaptor */
 	public $telegram;
 
+
 	protected $queue = [];
 
 	function init() {
@@ -54,7 +55,6 @@ class Initializer extends Singleton {
 		add_action( 'woocommerce_checkout_order_processed', [ $this, 'sendUpdatesToBot' ] );
 		add_action( 'woocommerce_order_status_changed', [ $this, 'woocommerce_new_order' ] );
 		add_action( 'woocommerce_order_status_changed', [ $this, 'sendUpdatesToBot' ] );
-//		add_action( 'init', [ $this, 'schedule_events' ] );
 		add_filter( 'cron_schedules', [ $this, 'add_minute_cron' ] );
 	}
 
@@ -83,7 +83,9 @@ class Initializer extends Singleton {
 	}
 
 	function admin_enqueue_script() {
-		wp_enqueue_script( 'wootb', plugin_dir_url( __FILE__ ) . '../assets/js/admin.js', array( 'jquery' ), '1.5', true );
+		wp_enqueue_script( 'wootb_admin_script', plugin_dir_url( __FILE__ ) . '../assets/js/admin.js', array( 'jquery' ), '1.5', true );
+		wp_register_style( 'wootb_css_script', plugin_dir_url( __FILE__ ) . '../assets/css/admin.css', false, '1.5' );
+		wp_enqueue_style( 'wootb_css_script' );
 	}
 
 	function sendTestMessage() {
@@ -98,22 +100,25 @@ class Initializer extends Singleton {
 	}
 
 	public function sendToAll( $messageIds, $text, $keyboard = null ) {
-		$chatIds = explode( ',', get_option( 'wootb_setting_chatid' ) );
-		foreach ( $chatIds as $chatId ) {
+		$chats = json_decode( get_option( 'wootb_setting_users' ), true );
+		foreach ( $chats as $id => $chat ) {
 			$tries = $message = 0;
 			do {
 				try {
-					if ( isset( $messageIds[ $chatId ] ) ) {
-						$message = $this->telegram->updateMessage( $chatId, $messageIds[ $chatId ], $text, $keyboard );
+					if ( isset( $messageIds[ $id ] ) ) {
+						$message = $this->telegram->updateMessage( $id, $messageIds[ $id ], $text, $keyboard );
+						if ( ! $message->ok && $message->description == "Bad Request: message to edit not found" ) {
+							unset( $messageIds[ $id ], $message->ok );
+						}
 					} else {
-						$message = $this->telegram->sendMessage( $chatId, $text, $keyboard );
+						$message = $this->telegram->sendMessage( $id, $text, $keyboard );
 					}
 				} catch ( \Exception $e ) {
 
 				}
 			} while ( ! isset( $message->ok ) && sleep( 1 ) !== false && $tries ++ < 5 );
 			if ( isset( $message->result->message_id ) ) {
-				$messageIds[ $chatId ] = $message->result->message_id;
+				$messageIds[ $id ] = $message->result->message_id;
 			}
 		}
 
@@ -155,7 +160,7 @@ class Initializer extends Singleton {
 
 	public function sendUpdatesToBot() {
 		$this->queue = $this->get_queue();
-		$chatIds     = explode( ',', get_option( 'wootb_setting_chatid' ) );
+		$chatIds     = json_decode( get_option( 'wootb_setting_users' ), true );
 		$chatCount   = count( $chatIds );
 		foreach ( $this->queue as $key => $order_id ) {
 			$sentCount = count( $this->sendUpdateToBot( $order_id ) );
@@ -235,5 +240,36 @@ class Initializer extends Singleton {
 		$settings[] = new OptionPanel( $this->telegram );
 
 		return $settings;
+	}
+
+	public function update() {
+		$chatIds = get_option( 'wootb_setting_chatid', false );
+		if ( $chatIds ) {
+			$chatIds  = explode( ',', $chatIds );
+			$complete = true;
+			foreach ( $chatIds as $chat_id ) {
+				$response = $this->telegram->request( 'getChat', [ 'chat_id' => $chat_id ] );
+				if ( $response->ok ) {
+					$chat = $response->result;
+					$this->registerUser( $chat );
+				} else {
+					$complete = false;
+				}
+			}
+			if ( $complete ) {
+				delete_option( 'wootb_setting_chatid' );
+			}
+		}
+	}
+
+	public function registerUser( $chat ) {
+		$users              = json_decode( get_option( 'wootb_setting_users' ), true );
+		$users[ $chat->id ] = [
+			'id'    => $chat->id,
+			'uname' => $chat->username,
+			'fname' => $chat->first_name,
+			'lname' => $chat->last_name
+		];
+		update_option( 'wootb_setting_users', json_encode( $users ) );
 	}
 }

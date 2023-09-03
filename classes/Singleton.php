@@ -2,25 +2,26 @@
 
 namespace WoocommerceTelegramBot\classes;
 
-abstract class Singleton
-{
+abstract class Singleton {
 
-    protected static $instance = null;
+	protected static $instances = [];
 
-    private final function __construct()
-    {
-        $this->init();
-    }
+	private final function __construct() {
+		$this->init();
+	}
 
-    abstract function init();
+	abstract function init();
 
-    public static function getInstance(): Singleton
-    {
-        return self::$instance ?? new static();
+	public static function getInstance(): Singleton {
+		$cls = static::class;
+		if (!isset(self::$instances[$cls])) {
+			self::$instances[$cls] = new static();
+		}
 
-    }
+		return self::$instances[$cls];
 
-    private final function __clone()
-    {
-    }
+	}
+
+	private final function __clone() {
+	}
 }

@@ -13,3 +13,6 @@ msgstr ""
 
 msgid "Telegram bot"
 msgstr "بات تلگرام"
+
+msgid "Telegram Configuration"
+msgstr "تنظیمات تلگرام"

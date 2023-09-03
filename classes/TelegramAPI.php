@@ -20,10 +20,7 @@ class TelegramAPI extends Singleton {
 		register_rest_route( 'wootb/telegram', "/hook", [
 			[
 				'methods'             => \WP_REST_Server::ALLMETHODS,
-				'callback'            => [
-					$this,
-					'update'
-				],
+				'callback'            => [ $this, 'update' ],
 				'permission_callback' => '__return_true',
 				'args'                => []
 			]
@@ -32,7 +29,6 @@ class TelegramAPI extends Singleton {
 
 
 	public function update(): \WP_REST_Response {
-		//$chatIds = explode(',', get_option('wootb_setting_chatid'));
 		$object = json_decode( \WP_REST_Server::get_raw_data() );
 		if ( isset( $object->callback_query ) ) {
 			$this->callback( $object );
@@ -66,7 +62,18 @@ class TelegramAPI extends Singleton {
 	}
 
 	public function command( $object ) {
-
+		preg_match( '/^\/(\w++)\s++(.++)$/ism', $object->message->text, $matches );
+		$cmd = $matches[1];
+		$arg = $matches[2];
+		switch ( $cmd ) {
+			case 'start':
+				$otp   = get_option( 'wootb_setting_otp' );
+				if ( $arg == $otp ) {
+					$chat    = $object->message->chat;
+					Initializer::getInstance()->registerUser($chat);
+				}
+				break;
+		}
 	}
 
 	public function simple( $object ) {

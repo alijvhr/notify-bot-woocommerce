@@ -2,130 +2,149 @@
 
 namespace WoocommerceTelegramBot\classes;
 
-class OptionPanel extends \WC_Settings_Page
-{
+class OptionPanel extends \WC_Settings_Page {
 
-    /**
-     * @var TelegramAdaptor
-     */
-    protected $telegram;
-    protected $current_section;
+	/**
+	 * @var TelegramAdaptor
+	 */
+	protected $telegram;
+	protected $current_section;
 
-    public function __construct($telegram)
-    {
-        parent::__construct();
+	public function __construct( $telegram ) {
+		global $current_section;
 
-        $this->id = 'wootb';
-        global $current_section;
-        $this->current_section = $current_section;
-        add_filter('woocommerce_settings_tabs_array', [$this, 'add_settings_tab'], 50);
-        add_action('woocommerce_settings_' . $this->id, [$this, 'output']);
-        add_action('woocommerce_settings_save_' . $this->id, [$this, 'save']);
-        add_action('woocommerce_sections_' . $this->id, [$this, 'wcslider_add_section']);
-        $this->telegram = $telegram;
-    }
+		$this->id              = 'wootb';
+		$this->label           = __( 'Telegram bot', 'woo-telegram-bot' );
+		$this->current_section = $current_section;
+		$this->telegram        = $telegram;
+		parent::__construct();
+	}
 
-    function wcslider_add_section()
-    {
-        $sections = ['' => 'hhh', 'hello2' => 'kkkk'];
-        echo '<ul class="subsubsub">';
+	function get_own_sections() {
+		return [
+			''         => __( 'telegram', 'woo-telegram-bot' ),
+			'register' => __( 'register', 'woo-telegram-bot' ),
+			'users'    => __( 'users', 'woo-telegram-bot' ),
+			'template' => __( 'message', 'woo-telegram-bot' )
+		];
 
-        $array_keys = array_keys($sections);
 
-        foreach ($sections as $id => $label) {
-            echo '<li><a href="' . admin_url('admin.php?page=wc-settings&tab=' . $this->id . '&section=' . sanitize_title($id)) . '" class="' . ($this->current_section == $id ? 'current' : '') . '">' . $label . '</a> ' . (end($array_keys) == $id ? '' : '|') . ' </li>';
-        }
+	}
 
-        echo '</ul><br class="clear" />';
-        return apply_filters('woocommerce_get_sections_' . $this->id, $sections);
+	public function get_settings_for_default_section() {
+		return [
+			'section_title_1' => [
+				'name' => __( 'Telegram Configuration', 'woo-telegram-bot' ),
+				'type' => 'title',
+				'id'   => 'wc_settings_tab_wootb_title'
+			],
+			'token'           => [
+				'name'     => __( 'bot token', 'woo-telegram-bot' ),
+				'type'     => 'text',
+				'id'       => 'wootb_setting_token',
+				'desc_tip' => true,
+				'desc'     => __( 'Enter your bot token', 'woo-telegram-bot' )
+			],
+			'use_proxy'       => [
+				'name'     => __( 'use proxy', 'woo-telegram-bot' ),
+				'type'     => 'checkbox',
+				'id'       => 'wootb_use_proxy',
+				'desc_tip' => false,
+				'desc'     => __( "It is particularly useful if your server is located in a country that has banned Telegram.", 'woo-telegram-bot' )
+			],
+			'section_end'     => [
+				'type' => 'sectionend',
+				'id'   => 'wc_settings_tab_wootb_end_section'
+			],
+		];
+	}
 
-    }
+	public function get_settings_for_register_section() {
+		$otp          = get_option( 'wootb_setting_otp' );
+		$bot_uname    = get_option( 'wootb_bot_username' );
+		$link         = "https://t.me/$bot_uname?start=$otp";
+		$encoded_link = urlencode( $link );
 
-    public function add_settings_tab($settings_tabs)
-    {
-        $settings_tabs[$this->id] = __('Telegram bot', 'woo-telegram-bot');
+		return [
+			'link_title'    => [
+				'name' => __( 'Link to register', 'woo-telegram-bot' ),
+				'id'   => 'wc_settings_tab_wootb_title_2',
+				'type' => 'title'
+			],
+			'register_link' => [
+				'type' => 'info',
+				'text' => "<a href=\"$link\">$link</a>"
+			],
+			'register_qr'   => [
+				'type' => 'info',
+				'text' => "<a href=\"$link\"><img src=\"https://chart.googleapis.com/chart?chs=300x300&cht=qr&chl=$encoded_link&choe=UTF-8\"></a>"
+			],
+			'section_end'   => [
+				'type' => 'sectionend',
+				'id'   => 'wc_settings_tab_wootb_end_section_2'
+			],
+		];
+	}
 
-        return $settings_tabs;
-    }
+	public function get_settings_for_users_section() {
+		return [
+			'section_title_1' => [
+				'name' => __( 'Users management', 'woo-telegram-bot' ),
+				'type' => 'title',
+				'id'   => 'wc_settings_tab_wootb_title_1',
+				'desc' => $this->render_users_table()
+			],
+			'section_end'     => [
+				'type' => 'sectionend',
+				'id'   => 'wc_settings_tab_wootb_end_section_2'
+			],
+		];
+	}
 
-    public function output()
-    {
-        $settings = $this->get_settings($this->current_section);
-        \WC_Admin_Settings::output_fields($settings);
-        $this->renderAllowTagsDescription();
-    }
+	public function render_users_table() {
+		$users = json_decode( get_option( 'wootb_setting_users' ), true );
+		$table = "<table class='wootb-table'><tr><th>id</th><th>username</th><th>first name</th><th>last name</th><th>remove</th></tr>";
+		foreach ( $users as $user ) {
+			$table .= "<tr><td>{$user['id']}</td><td>{$user['uname']}</td><td>{$user['fname']}</td><td>{$user['lname']}</td><td>{$user['lname']}</td></tr>";
+		}
+		$table .= "</table>";
 
-    public function get_settings($section = null)
-    {
-        $settings = '';
-        switch ($section) {
-            case '':
-                $settings = [
-                    'section_title_1' => [
-                        'name' => __('راهنما', 'woo-telegram-bot'),
-                        'type' => 'title',
-                        'desc' => $this->renderHelpDescription(),
-                        'id' => 'wc_settings_tab_wootb_title_1'
-                    ],
-                    'token' => [
-                        'name' => __('توکن ربات', 'woo-telegram-bot'),
-                        'type' => 'text',
-                        'id' => 'wootb_setting_token',
-                        'desc_tip' => true,
-                        'desc' => __('توکن ربات را وارد کنید', 'woo-telegram-bot')
-                    ],
-                    'chatid' => [
-                        'name' => __('آیدی چت یا گروه', 'woo-telegram-bot'),
-                        'type' => 'text',
-                        'id' => 'wootb_setting_chatid',
-                        'desc_tip' => true,
-                        'desc' => __('آیدی چت یا گروه را وارد کنید، برای اطلاعات بیشتر به ربات تلگرامی @UserAccInfoBot مراجعه نمایید', 'woo-telegram-bot')
-                    ],
-                    'use_proxy' => [
-                        'name' => __('use proxy', 'woo-telegram-bot'),
-                        'type' => 'checkbox',
-                        'id' => 'wootb_use_proxy',
-                        'desc_tip' => true,
-                        'desc' => __("To access Telegram servers using a proxy service, you can enable this feature. It is particularly useful if your server is located in a country that has banned Telegram.")
-                    ],
-                    'message_template' => [
-                        'name' => __('نمونه پیام ارسالی', 'woo-telegram-bot'),
-                        'type' => 'textarea',
-                        'id' => 'wootb_setting_template',
-                        'class' => 'code',
-                        'css' => 'max-width:550px;width:100%;',
-                        'default' => file_get_contents(WOOTB_PLUGIN_DIR . '/views/default-msg.php'),
-                        'custom_attributes' => ['rows' => 10],
-                    ],
-                    'section_end' => [
-                        'type' => 'sectionend',
-                        'id' => 'wc_settings_tab_wootb_end_section_2'
-                    ],
-                ];
-                break;
-        }
+		return $table;
+	}
 
-        return apply_filters('wc_settings_tab_' . $this->id, $settings, $section);
+	public function get_settings_for_template_section() {
+		return [
+			'section_title_1'  => [
+				'name' => __( 'Message settings', 'woo-telegram-bot' ),
+				'type' => 'title',
+				'id'   => 'wc_settings_tab_wootb_title_1'
+			],
+			'message_template' => [
+				'name'              => __( 'template', 'woo-telegram-bot' ),
+				'type'              => 'textarea',
+				'id'                => 'wootb_setting_template',
+				'class'             => 'code',
+				'css'               => 'max-width:550px;width:100%;',
+				'default'           => file_get_contents( WOOTB_PLUGIN_DIR . '/views/default-msg.php' ),
+				'custom_attributes' => [ 'rows' => 10 ],
+			],
+			'section_end'      => [
+				'type' => 'sectionend',
+				'id'   => 'wc_settings_tab_wootb_end_section_2'
+			],
+		];
+	}
 
-    }
-
-    public function renderHelpDescription()
-    {
-
-        $chatid_help = wp_kses(__("برای دریافت آیدی تان نیز از ربات <a href='https://t.me/UserAccInfoBot' target='_blank'>@UserAccInfoBot</a> استفاده کنید. راهنمایی های بیشتر و نحوه بدست آوردن آیدی چت یا گروه در این ربات وجود دارد.", "wootb"), ['a' => ['href' => 'https://t.me/UserAccInfoBot', 'target' => '_blank'], 'code' => []]);
-
-        return $chatid_help . chr(10);
-    }
-
-    public function renderAllowTagsDescription()
-    {
-        include WOOTB_PLUGIN_DIR . '/views/markingDescription.php';
-    }
-
-    public function save()
-    {
-        $settings = $this->get_settings();
-        $this->telegram->setWebhook(site_url("/wp-json/wootb/telegram/hook"));
-        \WC_Admin_Settings::save_fields($settings);
-    }
+	public function save() {
+		parent::save();
+		if ( in_array( $this->current_section, [ '', 'register' ] ) ) {
+			Initializer::getInstance()->update();
+			$response = $this->telegram->setWebhook( site_url( "/wp-json/wootb/telegram/hook" ) );
+			if ( $response->ok ) {
+				$info = $this->telegram->getInfo();
+				update_option( 'wootb_bot_username', $info->result->username );
+				update_option( 'wootb_setting_otp', md5( time() ) );
+			}
+		}
+	}
 }

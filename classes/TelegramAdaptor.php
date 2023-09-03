@@ -38,7 +38,7 @@ class TelegramAdaptor
         return $data;
     }
 
-    private function request($method, $data = [])
+    public function request($method, $data = [])
     {
         if (!$this->reqUrl) {
             $this->reqUrl = "$this->tel_url/bot$this->token";
@@ -85,8 +85,8 @@ class TelegramAdaptor
         return $this->request('setWebhook', ['url' => $url]);
     }
 
-    public function getWebhookInfo()
+    public function getInfo()
     {
-        return $this->request('getWebhookInfo');
+        return $this->request('getMe');
     }
 }

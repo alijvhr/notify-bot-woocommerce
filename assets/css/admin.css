@@ -1,0 +1,72 @@
+textarea.code {
+    background-color: #141414;
+    color: #F8F8F8;
+    width: 100%;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
+}
+
+.wootb-table {
+    --border-radius: 7px;
+    --border: 1px solid #d9d9d9;
+    border-collapse: collapse;
+    border-spacing: 0;
+    font-size: 1.3em;
+    box-shadow: 2px 2px 5px 1px #ccc;
+    border-radius: var(--border-radius);
+    width: 100%;
+    max-width: 1000px;
+}
+
+.wootb-table tr {
+    border-bottom: var(--border);
+}
+
+.wootb-table th {
+    background: #b3dfc1;
+    font-size: 1.2em;
+}
+
+.wootb-table th, .wootb-table td {
+    padding: 12px 20px;
+    text-align: center;
+}
+
+body.rtl .wootb-table th:first-of-type {
+    border-top-left-radius: 0;
+    border-top-right-radius: var(--border-radius);
+}
+
+body.rtl .wootb-table th:last-of-type {
+    border-top-right-radius: 0;
+    border-top-left-radius: var(--border-radius);
+}
+
+body.rtl .wootb-table tr:last-of-type td:first-of-type {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: var(--border-radius);
+}
+
+body.rtl .wootb-table tr:last-of-type td:last-of-type {
+    border-bottom-right-radius: 0;
+    border-bottom-left-radius: var(--border-radius);
+}
+
+.wootb-table th:first-of-type {
+    border: 0;
+    border-top-left-radius: var(--border-radius);
+}
+
+.wootb-table th:last-of-type {
+    border: 0;
+    border-top-right-radius: var(--border-radius);
+}
+
+.wootb-table tr:last-of-type td:first-of-type {
+    border: 0;
+    border-bottom-left-radius: var(--border-radius);
+}
+
+.wootb-table tr:last-of-type td:last-of-type {
+    border: 0;
+    border-bottom-right-radius: var(--border-radius);
+}

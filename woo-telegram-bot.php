@@ -47,7 +47,7 @@ define( 'WOOTB_PLUGIN_ICON', plugins_url( "images/ic.png", __FILE__ ) );
 
 /**@var \WoocommerceTelegramBot\classes\Initializer $wootb */
 
-$wootb = Initializer::getInstance();
+$wootb   = Initializer::getInstance();
 
 $wootb->schedule_events();
 function wooSendUpdates() {
