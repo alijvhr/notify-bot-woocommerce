@@ -2,16 +2,16 @@
 
 
 /**
- * Woocommerce Telegram Bot
+ * Telegram bot for WooCommerce
  *
  * @package WoocommerceTelegramBot
  * @version 1.0.1
- * @license MIT
+ * @license GPL-2.0-or-later
  * @author  Ali Javaheri
  *
  * @wordpress-plugin
- * Plugin Name: Woocommerce Telegram Bot
- * Description: Send order details to telegram bot
+ * Plugin Name: Telegram bot for WooCommerce
+ * Description: Receive order details and manage them using your telegram
  * Author: Ali Javaheri
  * Version: 1.0.1
  * Author URI: https://alijvhr.com
@@ -19,14 +19,15 @@
  * Requires PHP: 7.3
  * WC requires at least: 3.2
  * WC tested up to: 7.9
- * Text Domain: wootb
- * License: MIT
- * License URI: https://opensource.org/licenses/MIT
+ * Text Domain: telegram-bot-for-woocommerce
+ * Domain Path: /languages
+ * License: GPL v2 or later
+ * License URI: http://www.gnu.org/licenses/gpl-2.0.txt
  */
 
 namespace WoocommerceTelegramBot;
 
-use WoocommerceTelegramBot\classes\Initializer;
+use WoocommerceTelegramBot\includes\Initializer;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -45,7 +46,7 @@ define( 'WOOTB_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'WOOTB_PLUGIN_DIR', __DIR__ );
 define( 'WOOTB_PLUGIN_ICON', plugins_url( "images/ic.png", __FILE__ ) );
 
-/**@var \WoocommerceTelegramBot\classes\Initializer $wootb */
+/**@var \WoocommerceTelegramBot\includes\Initializer $wootb */
 
 $wootb   = Initializer::getInstance();
 

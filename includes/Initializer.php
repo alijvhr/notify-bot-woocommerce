@@ -1,6 +1,6 @@
 <?php
 
-namespace WoocommerceTelegramBot\classes;
+namespace WoocommerceTelegramBot\includes;
 
 use Safe\Exceptions\VarException;
 
@@ -13,7 +13,7 @@ class Initializer extends Singleton {
 
 	function init() {
 		$path = dirname( plugin_basename( __FILE__ ), 2 );
-		load_plugin_textdomain( 'woo-telegram-bot', false, "$path/languages/" );
+		load_plugin_textdomain( 'telegram-bot-for-woocommerce', false, "$path/languages/" );
 		$active_plugins = apply_filters( 'active_plugins', get_option( 'active_plugins' ) );
 
 		if ( in_array( 'woocommerce/woocommerce.php', $active_plugins ) ) {
@@ -32,12 +32,12 @@ class Initializer extends Singleton {
 	}
 
 	function woocommerceNotice() {
-		$message = __( 'Please activate woocommerce on your wp installation in order to use Woocommerce Telegram Bot plugin', 'woo-telegram-bot' );
+		$message = __( 'Please activate woocommerce on your wp installation in order to use Telegram bot for WooCommerce plugin', 'telegram-bot-for-woocommerce' );
 		echo "<div class=\"notice notice-error\"><p>$message</p></div>";
 	}
 
 	function add_action_links( $actions ) {
-		$configure = __( 'Configure', 'woo-telegram-bot' );
+		$configure = __( 'Configure', 'telegram-bot-for-woocommerce' );
 		$url       = admin_url( 'admin.php?page=wc-settings&tab=wootb' );
 		$actions[] = "<a href=\"$url\">$configure</a>";
 
@@ -56,6 +56,7 @@ class Initializer extends Singleton {
 		add_action( 'woocommerce_order_status_changed', [ $this, 'woocommerce_new_order' ] );
 		add_action( 'woocommerce_order_status_changed', [ $this, 'sendUpdatesToBot' ] );
 		add_filter( 'cron_schedules', [ $this, 'add_minute_cron' ] );
+		add_action( 'admin_action_remove_wootb_user', [ $this, 'remove_wootb_user' ] );
 	}
 
 	private function initTelegramBot() {
@@ -63,6 +64,19 @@ class Initializer extends Singleton {
 		$use_proxy      = get_option( 'wootb_use_proxy' );
 		$this->telegram->use_proxy( $use_proxy );
 		TelegramAPI::getInstance()->setAdaptor( $this->telegram );
+	}
+
+	public function remove_wootb_user() {
+		$uid = intval( $_REQUEST['uid'] );
+		$this->unregisterUser( $uid );
+		wp_redirect( admin_url( 'admin.php?page=wc-settings&tab=wootb&section=users' ) );
+		exit;
+	}
+
+	public function unregisterUser( $chat_id ) {
+		$users = json_decode( get_option( 'wootb_setting_users' ), true );
+		unset( $users[ $chat_id ] );
+		update_option( 'wootb_setting_users', json_encode( $users ) );
 	}
 
 	public function schedule_events() {
@@ -75,7 +89,7 @@ class Initializer extends Singleton {
 		if ( ! isset( $schedules['every_minute'] ) ) {
 			$schedules['every_minute'] = [
 				'interval' => 60,
-				'display'  => __( 'Every 1 Minute', 'woo-telegram-bot' ),
+				'display'  => __( 'Every 1 Minute', 'telegram-bot-for-woocommerce' ),
 			];
 		}
 
@@ -90,8 +104,8 @@ class Initializer extends Singleton {
 
 	function sendTestMessage() {
 		try {
-			$this->sendToAll( [], __( 'This is a test message from Woocommerce telegram bot Plugin!', 'woo-telegram-bot' ) );
-			echo json_encode( [ 'error' => 0, 'message' => __( 'Message successfully sent', 'woo-telegram-bot' ) ] );
+			$this->sendToAll( [], __( 'This is a test message from Telegram bot for WooCommerce Plugin!', 'telegram-bot-for-woocommerce' ) );
+			echo json_encode( [ 'error' => 0, 'message' => __( 'Message successfully sent', 'telegram-bot-for-woocommerce' ) ] );
 			wp_die();
 		} catch ( \Exception $ex ) {
 			echo json_encode( [ 'error' => 1, 'message' => $ex->getMessage() ] );
@@ -178,34 +192,34 @@ class Initializer extends Singleton {
 		$messageIds = json_decode( get_post_meta( $order_id, 'WooTelegramMessageIds', true ) ?: "[]", true );
 		$status     = $wc->get_status();
 		$keyboard   = new TelegramKeyboard( 2 );
-		if ( $status != 'completed' ) {
-			$keyboard->add_inline_callback_button( '✅ ' . __( 'Complete', 'woo-telegram-bot' ), [
-				"cmd" => "status",
-				"oid" => $order_id,
-				"st"  => 0
-			] );
-		}
-		if ( $status != 'refunded' ) {
-			$keyboard->add_inline_callback_button( '💸 ' . __( 'Refund', 'woo-telegram-bot' ), [
-				"cmd" => "status",
-				"oid" => $order_id,
-				"st"  => 1
-			] );
-		}
 		if ( $status != 'processing' ) {
-			$keyboard->add_inline_callback_button( '🕙 ' . __( 'Process', 'woo-telegram-bot' ), [
+			$keyboard->add_inline_callback_button( '🕙 ' . __( 'Process', 'telegram-bot-for-woocommerce' ), [
 				"cmd" => "status",
 				"oid" => $order_id,
 				"st"  => 2
 			] );
 		}
 		if ( $status != 'cancelled' ) {
-			$keyboard->add_inline_callback_button( '❌ ' . __( 'Cancel', 'woo-telegram-bot' ), [
+			$keyboard->add_inline_callback_button( '❌ ' . __( 'Cancel', 'telegram-bot-for-woocommerce' ), [
 				"cmd" => "status",
 				"oid" => $order_id,
 				"st"  => 3
 			] );
 		}
+        if ( $status != 'refunded' ) {
+            $keyboard->add_inline_callback_button( '💸 ' . __( 'Refund', 'telegram-bot-for-woocommerce' ), [
+                "cmd" => "status",
+                "oid" => $order_id,
+                "st"  => 1
+            ] );
+        }
+        if ( $status != 'completed' ) {
+            $keyboard->add_inline_callback_button( '✅ ' . __( 'Complete', 'telegram-bot-for-woocommerce' ), [
+                "cmd" => "status",
+                "oid" => $order_id,
+                "st"  => 0
+            ] );
+        }
 		$messageIds = $this->sendToAll( $messageIds, $text, $keyboard );
 		update_post_meta( $order_id, 'WooTelegramMessageIds', json_encode( $messageIds ) );
 
@@ -243,6 +257,8 @@ class Initializer extends Singleton {
 	}
 
 	public function update() {
+
+		// Update old version chat IDs without restarting the bot
 		$chatIds = get_option( 'wootb_setting_chatid', false );
 		if ( $chatIds ) {
 			$chatIds  = explode( ',', $chatIds );
@@ -265,10 +281,11 @@ class Initializer extends Singleton {
 	public function registerUser( $chat ) {
 		$users              = json_decode( get_option( 'wootb_setting_users' ), true );
 		$users[ $chat->id ] = [
-			'id'    => $chat->id,
-			'uname' => $chat->username,
-			'fname' => $chat->first_name,
-			'lname' => $chat->last_name
+			'id'      => $chat->id,
+			'uname'   => $chat->username,
+			'fname'   => $chat->first_name,
+			'lname'   => $chat->last_name,
+			'enabled' => true
 		];
 		update_option( 'wootb_setting_users', json_encode( $users ) );
 	}

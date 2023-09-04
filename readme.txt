@@ -1,4 +1,4 @@
-== WooCommerce Telegram bot ==
+== Telegram bot for Woocommerce ==
 Contributors: alijvhr
 Tags: telegram, notification, woocommerce notifier, woocommerce, تلگرام, نوتیفیکیشن, تلگرام, ووکامرس تلگرام
 Tested up to: 6.2
@@ -8,7 +8,7 @@ WC tested up to: 7.9
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
-WooCommerce to Telegram Bot: Streamline Order Management Effortlessly
+Telegram bot for WooCommerce: Streamline Order Management Effortlessly
 
 == Description ==
 
@@ -21,7 +21,7 @@ Key Features:
 * Seamless Order Status Updates: Easily change the order status (in progress, canceled, completed, etc.) through Telegram messages.
 * Instant Notifications: Stay informed about order updates with personalized notifications based on the order status.
 * Customizable Messages: Tailor the content of your notifications by including details such as customer name, address, shipping method, payment method, and more.
-* Price Alignment: The plugin adapts to your WooCommerce settings, ensuring accurate pricing information in Telegram notifications.
+* Price Alignment: The plugin adapts to your Woocommerce settings, ensuring accurate pricing information in Telegram notifications.
 * Product Compatibility: Support for simple, variable, and virtual products, enabling a wide range of offerings.
 * User-Friendly Configuration: Enjoy a hassle-free experience with easy-to-use and straightforward settings.
 
@@ -38,12 +38,19 @@ Don't let limitations hold you back. Embrace the potential of WooCommerce and re
 
 == How to Use ==
 
-First, activate the plugin, and then configure it in the WooCommerce settings.
+1. Create your bot using [@botfather](https://t.me/BotFather)
+2. Install and activate the plugin.
+3. Navigate to `Admin Dashboard > Woocommerce > Settings > Telegram bot`
+4. In default section paste your bot token and `save changes`
+5. Use the link in register section to start the bot for your colleagues.
+6. You can manage your bot users using the users section!
+
 
 == Installation ==
 
 1. Copy the plugin files to `WP_INSTALLATION_PATH/wp-content/plugins/` or install using WordPress plugins directory.
 2. Activate the plugin using plugins menu in your WordPress dashboard.
+3. Enjoy!
 
 == Changelog ==
 

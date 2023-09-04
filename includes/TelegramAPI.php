@@ -1,6 +1,6 @@
 <?php
 
-namespace WoocommerceTelegramBot\classes;
+namespace WoocommerceTelegramBot\includes;
 
 class TelegramAPI extends Singleton {
 	/**

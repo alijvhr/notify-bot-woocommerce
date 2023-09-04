@@ -1,6 +1,6 @@
 <?php
 
-namespace WoocommerceTelegramBot\classes;
+namespace WoocommerceTelegramBot\includes;
 
 
 use WC_Customer;
@@ -112,8 +112,9 @@ class WooCommerceAdaptor {
 			foreach ( $items as $item ) {
 				$product_item = $item->get_product();
 				if ( $product_item ) {
-					$price     = wc_get_price_to_display( $product_item );
-					$product   .= $item->get_name() . ': ' . $item->get_quantity() . '  عدد ' . ' با قیمت ' . $this->format_price( $price ) . "\n";
+					$price     = $this->format_price( wc_get_price_to_display( $product_item ) );
+					$title     = is_rtl() ? str_replace( ' - ', '‏ - ', $item->get_name() ) : $item->get_name();
+					$product   .= sprintf( __( "%1\$s : %2\$sQty x %3\$s\n", 'telegram-bot-for-woocommerce' ), $title, $item->get_quantity(), $price );
 					$item_meta = $item->get_meta_data();
 					if ( $item_meta ) {
 						if ( is_array( $item_meta ) ) {

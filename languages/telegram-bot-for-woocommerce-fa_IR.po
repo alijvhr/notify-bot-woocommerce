@@ -1,0 +1,84 @@
+# Copyright (C) 2023 Ali Javaheri
+# This file is distributed under the GPLv3.
+msgid ""
+msgstr ""
+"Project-Id-Version: Telegram bot for WooCommerce 1.0.1\n"
+"Report-Msgid-Bugs-To: https://github.com/alijvhr/telegram-bot-for-woocommerce\n"
+"Last-Translator: Ali Javaheri <me@alijvhr.com>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: 2023-07-30T17:48:03+03:30\n"
+"X-Domain: telegram-bot-for-woocommerce\n"
+
+msgid "Receive order details and manage them using your telegram"
+msgstr "جزئیات سفارشات را در تلگرام خود دریافت و مدیریت کنید"
+
+msgid "Telegram bot for WooCommerce"
+msgstr "بات تلگرام ووکامرس"
+
+msgid "Ali Javaheri"
+msgstr "علی جواهری"
+
+msgid "Configure"
+msgstr "تنظیمات"
+
+msgid "Telegram bot"
+msgstr "بات تلگرام"
+
+msgid "Telegram Configuration"
+msgstr "تنظیمات تلگرام"
+
+msgid "telegram"
+msgstr "تلگرام"
+
+msgid "register"
+msgstr "عضویت"
+
+msgid "users"
+msgstr "کاربران"
+
+msgid "message"
+msgstr "پیام"
+
+msgid "bot token"
+msgstr "توکن بات"
+
+msgid "Enter your bot token"
+msgstr "توکن خود را وارد کنید"
+
+msgid "use proxy"
+msgstr "استفاده از پروکسی"
+
+msgid "It is particularly useful if your server is located in a country that has banned Telegram."
+msgstr "درصورتی استفاده کنید که سرور شما در کشورهایی که تلگرام را مسدود کرده اند، واقع شده است."
+
+msgid "Registration link (bot start)"
+msgstr "لینک عضویت (استارت بات)"
+
+msgid "Users management"
+msgstr "مدیریت کاربران"
+
+msgid "ID"
+msgstr "شناسه"
+
+msgid "username"
+msgstr "نام کاربری"
+
+msgid "first name"
+msgstr "نام"
+
+msgid "last name"
+msgstr "نام خانوادگی"
+
+msgid "remove"
+msgstr "حذف"
+
+msgid "Message settings"
+msgstr "تنظیمات پیام"
+
+msgid "template"
+msgstr "قالب"
+
+msgid "%1$s : %2$sQty x %3$s\n"
+msgstr "%1$s : %2$sعدد با قیمت %3$s\n"
