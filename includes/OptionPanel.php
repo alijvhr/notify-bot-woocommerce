@@ -146,7 +146,6 @@ class OptionPanel extends \WC_Settings_Page {
 	public function save() {
 		parent::save();
 		if ( in_array( $this->current_section, [ '', 'register' ] ) ) {
-			Initializer::getInstance()->update();
 			$response = $this->telegram->setWebhook( site_url( "/wp-json/wootb/telegram/hook" ) );
 			if ( $response->ok ) {
 				$info = $this->telegram->getInfo();
