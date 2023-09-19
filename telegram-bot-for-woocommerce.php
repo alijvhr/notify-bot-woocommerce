@@ -5,7 +5,7 @@
  * Telegram bot for WooCommerce
  *
  * @package WoocommerceTelegramBot
- * @version 1.0.1
+ * @version 1.1.0
  * @license GPL-2.0-or-later
  * @author  Ali Javaheri
  *
@@ -13,7 +13,7 @@
  * Plugin Name: Telegram bot for WooCommerce
  * Description: Receive order details and manage them using your telegram
  * Author: Ali Javaheri
- * Version: 1.0.1
+ * Version: 1.1.0
  * Author URI: https://alijvhr.com
  * Requires at least: 5.2
  * Requires PHP: 7.3
