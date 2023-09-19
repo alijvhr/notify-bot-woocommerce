@@ -33,6 +33,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+define( 'WOOTB_PLUGIN_VERSION', '1.1.0' );
+
 function wootb_auto_loader( $class ) {
 	if ( substr( $class, 0, 22 ) == 'WoocommerceTelegramBot' ) {
 		require __DIR__ . str_replace( '\\', DIRECTORY_SEPARATOR, substr( $class, 22 ) ) . '.php';
@@ -42,7 +44,6 @@ function wootb_auto_loader( $class ) {
 spl_autoload_register( 'WoocommerceTelegramBot\\wootb_auto_loader', true, true );
 
 define( 'WOOTB_PLUGIN_PATH', plugin_dir_path( __FILE__ ) );
-define( 'WOOTB_PLUGIN_VERSION', '1.0.3' );
 define( 'WOOTB_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'WOOTB_PLUGIN_DIR', __DIR__ );
 define( 'WOOTB_PLUGIN_ICON', plugins_url( "images/ic.png", __FILE__ ) );

@@ -80,5 +80,11 @@ msgstr "تنظیمات پیام"
 msgid "template"
 msgstr "قالب"
 
+msgid "Remove message keyboards on order complete."
+msgstr "دکمه های زیر پیام با تکمیل سفارش حذف شوند."
+
+msgid "Remove btn on complete"
+msgstr "حذف دکمه ها با تکمیل سفارش"
+
 msgid "%1$s : %2$sQty x %3$s\n"
 msgstr "%1$s : %2$sعدد با قیمت %3$s\n"

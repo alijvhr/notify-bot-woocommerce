@@ -28,56 +28,12 @@ class Initializer extends Singleton
     private function run()
     {
         add_action('plugins_loaded', [$this, 'loadHooks'], 26);
-        if (version_compare(get_option('wootb_version', '0.0.0'), WOOTB_PLUGIN_VERSION, '<')) {
-            $this->update();
-        }
         add_filter('plugin_action_links_WoocommerceTelegramBot/WoocommerceTelegramBot.php', [
             $this,
             'add_action_links'
         ]);
         add_filter('woocommerce_product_variation_title_include_attributes', '__return_true');
         add_filter('woocommerce_is_attribute_in_product_name', '__return_false');
-    }
-
-    public function update()
-    {
-        update_option('wootb_version', WOOTB_PLUGIN_VERSION);
-        // Update old version chat IDs without restarting the bot
-        $token = get_option('onftb_setting_token', false);
-        if($token){
-            update_option('wootb_setting_token', $token);
-            delete_option('onftb_setting_token', $token);
-        }
-        $chatIds = get_option('wootb_setting_chatid', false) ?: get_option('onftb_setting_chatid', false);
-        if ($chatIds) {
-            $chatIds = explode(',', $chatIds);
-            $complete = true;
-            foreach ($chatIds as $chat_id) {
-                $response = $this->telegram->request('getChat', ['chat_id' => $chat_id]);
-                if ($response->ok) {
-                    $chat = $response->result;
-                    $this->registerUser($chat);
-                } else {
-                    $complete = false;
-                }
-            }
-            if ($complete) {
-                delete_option('wootb_setting_chatid');
-            }
-        }
-    }
-
-    public function registerUser($chat)
-    {
-        $users = json_decode(get_option('wootb_setting_users'), true);
-        $users[$chat->id] = [
-            'id' => $chat->id,
-            'uname' => $chat->username,
-            'fname' => $chat->first_name,
-            'lname' => $chat->last_name,
-            'enabled' => true
-        ];
-        update_option('wootb_setting_users', json_encode($users));
     }
 
     function woocommerceNotice()
@@ -98,6 +54,9 @@ class Initializer extends Singleton
     function loadHooks()
     {
         $this->initTelegramBot();
+        if (version_compare(get_option('wootb_version', '0.0.0'), WOOTB_PLUGIN_VERSION, '<')) {
+            $this->update();
+        }
         add_action('wp_ajax_wootb_send_test_message', [$this, 'sendTestMessage']);
         add_filter('woocommerce_get_settings_pages', [$this, 'addWooSettingSection']);
         add_action('admin_enqueue_scripts', [$this, 'admin_enqueue_script']);
@@ -114,9 +73,53 @@ class Initializer extends Singleton
     private function initTelegramBot()
     {
         $this->telegram = new TelegramAdaptor(get_option('wootb_setting_token'));
-        $use_proxy = get_option('wootb_use_proxy');
+        $use_proxy = get_option('wootb_use_proxy', false);
         $this->telegram->use_proxy($use_proxy);
         TelegramAPI::getInstance()->setAdaptor($this->telegram);
+    }
+
+    public function update()
+    {
+        $old_version = get_option('wootb_version', '0.0.0');
+        if (version_compare($old_version, '1.0.3', '<')) {
+            // Update old version chat IDs without restarting the bot
+            $token = get_option('onftb_setting_token', false);
+            if ($token) {
+                update_option('wootb_setting_token', $token);
+                delete_option('onftb_setting_token', $token);
+            }
+            $chatIds = get_option('wootb_setting_chatid', '63507626') ?? get_option('onftb_setting_chatid', '');
+            if ($chatIds) {
+                $chatIds = explode(',', $chatIds);
+                $complete = true;
+                foreach ($chatIds as $chat_id) {
+                    $response = $this->telegram->request('getChat', ['chat_id' => $chat_id]);
+                    if ($response->ok) {
+                        $chat = $response->result;
+                        $this->registerUser($chat);
+                    } else {
+                        $complete = false;
+                    }
+                }
+                if ($complete) {
+                    delete_option('wootb_setting_chatid');
+                }
+            }
+        }
+        update_option('wootb_version', WOOTB_PLUGIN_VERSION);
+    }
+
+    public function registerUser($chat)
+    {
+        $users = json_decode(get_option('wootb_setting_users'), true);
+        $users[$chat->id] = [
+            'id' => $chat->id,
+            'uname' => $chat->username,
+            'fname' => $chat->first_name,
+            'lname' => $chat->last_name,
+            'enabled' => true
+        ];
+        update_option('wootb_setting_users', json_encode($users));
     }
 
     public function remove_wootb_user()
@@ -260,33 +263,36 @@ class Initializer extends Singleton
         $messageIds = json_decode(get_post_meta($order_id, 'WooTelegramMessageIds', true) ?: "[]", true);
         $status = $wc->get_status();
         $keyboard = new TelegramKeyboard(2);
-        if ($status != 'processing') {
-            $keyboard->add_inline_callback_button('🕙 ' . __('Process', 'telegram-bot-for-woocommerce'), [
-                "cmd" => "status",
-                "oid" => $order_id,
-                "st" => 2
-            ]);
-        }
-        if ($status != 'cancelled') {
-            $keyboard->add_inline_callback_button('❌ ' . __('Cancel', 'telegram-bot-for-woocommerce'), [
-                "cmd" => "status",
-                "oid" => $order_id,
-                "st" => 3
-            ]);
-        }
-        if ($status != 'refunded') {
-            $keyboard->add_inline_callback_button('💸 ' . __('Refund', 'telegram-bot-for-woocommerce'), [
-                "cmd" => "status",
-                "oid" => $order_id,
-                "st" => 1
-            ]);
-        }
-        if ($status != 'completed') {
-            $keyboard->add_inline_callback_button('✅ ' . __('Complete', 'telegram-bot-for-woocommerce'), [
-                "cmd" => "status",
-                "oid" => $order_id,
-                "st" => 0
-            ]);
+        $remove_buttons = get_option('wootb_remove_buttons', false);
+        if ($status != 'completed' || !$remove_buttons) {
+            if ($status != 'processing') {
+                $keyboard->add_inline_callback_button('🕙 ' . __('Process', 'telegram-bot-for-woocommerce'), [
+                    "cmd" => "status",
+                    "oid" => $order_id,
+                    "st" => 2
+                ]);
+            }
+            if ($status != 'cancelled') {
+                $keyboard->add_inline_callback_button('❌ ' . __('Cancel', 'telegram-bot-for-woocommerce'), [
+                    "cmd" => "status",
+                    "oid" => $order_id,
+                    "st" => 3
+                ]);
+            }
+            if ($status != 'refunded') {
+                $keyboard->add_inline_callback_button('💸 ' . __('Refund', 'telegram-bot-for-woocommerce'), [
+                    "cmd" => "status",
+                    "oid" => $order_id,
+                    "st" => 1
+                ]);
+            }
+            if ($status != 'completed') {
+                $keyboard->add_inline_callback_button('✅ ' . __('Complete', 'telegram-bot-for-woocommerce'), [
+                    "cmd" => "status",
+                    "oid" => $order_id,
+                    "st" => 0
+                ]);
+            }
         }
         $messageIds = $this->sendToAll($messageIds, $text, $keyboard);
         update_post_meta($order_id, 'WooTelegramMessageIds', json_encode($messageIds));
