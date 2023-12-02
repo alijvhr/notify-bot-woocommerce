@@ -16,7 +16,7 @@ class OptionPanel extends \WC_Settings_Page
         global $current_section;
 
         $this->id = 'wootb';
-        $this->label = __('Telegram bot', 'telegram-bot-for-woocommerce');
+        $this->label = __('Telegram bot', 'notify-bot-woocommerce');
         $this->current_section = $current_section;
         $this->telegram = $telegram;
         parent::__construct();
@@ -25,10 +25,10 @@ class OptionPanel extends \WC_Settings_Page
     function get_own_sections()
     {
         return [
-            '' => __('telegram', 'telegram-bot-for-woocommerce'),
-            'register' => __('register', 'telegram-bot-for-woocommerce'),
-            'users' => __('users', 'telegram-bot-for-woocommerce'),
-            'template' => __('message', 'telegram-bot-for-woocommerce')
+            '' => __('telegram', 'notify-bot-woocommerce'),
+            'register' => __('register', 'notify-bot-woocommerce'),
+            'users' => __('users', 'notify-bot-woocommerce'),
+            'template' => __('message', 'notify-bot-woocommerce')
         ];
 
 
@@ -38,23 +38,23 @@ class OptionPanel extends \WC_Settings_Page
     {
         return [
             'section_title_1' => [
-                'name' => __('Telegram Configuration', 'telegram-bot-for-woocommerce'),
+                'name' => __('Telegram Configuration', 'notify-bot-woocommerce'),
                 'type' => 'title',
                 'id' => 'wc_settings_tab_wootb_title'
             ],
             'token' => [
-                'name' => __('bot token', 'telegram-bot-for-woocommerce'),
+                'name' => __('bot token', 'notify-bot-woocommerce'),
                 'type' => 'text',
                 'id' => 'wootb_setting_token',
                 'desc_tip' => true,
-                'desc' => __('Enter your bot token', 'telegram-bot-for-woocommerce')
+                'desc' => __('Enter your bot token', 'notify-bot-woocommerce')
             ],
             'use_proxy' => [
-                'name' => __('use proxy', 'telegram-bot-for-woocommerce'),
+                'name' => __('use proxy', 'notify-bot-woocommerce'),
                 'type' => 'checkbox',
                 'id' => 'wootb_use_proxy',
                 'desc_tip' => false,
-                'desc' => __("It is particularly useful if your server is located in a country that has banned Telegram.", 'telegram-bot-for-woocommerce')
+                'desc' => __("It is particularly useful if your server is located in a country that has banned Telegram.", 'notify-bot-woocommerce')
             ],
             'section_end' => [
                 'type' => 'sectionend',
@@ -72,7 +72,7 @@ class OptionPanel extends \WC_Settings_Page
 
         return [
             'link_title' => [
-                'name' => __('Registration link (bot start)', 'telegram-bot-for-woocommerce'),
+                'name' => __('Registration link (bot start)', 'notify-bot-woocommerce'),
                 'id' => 'wc_settings_tab_wootb_title_2',
                 'type' => 'title'
             ],
@@ -95,7 +95,7 @@ class OptionPanel extends \WC_Settings_Page
     {
         return [
             'section_title_1' => [
-                'name' => __('Users management', 'telegram-bot-for-woocommerce'),
+                'name' => __('Users management', 'notify-bot-woocommerce'),
                 'type' => 'title',
                 'id' => 'wc_settings_tab_wootb_title_1',
                 'desc' => $this->render_users_table()
@@ -111,11 +111,11 @@ class OptionPanel extends \WC_Settings_Page
     {
         $users = json_decode(get_option('wootb_setting_users'), true);
         $headers = [
-            __('ID', 'telegram-bot-for-woocommerce'),
-            __('username', 'telegram-bot-for-woocommerce'),
-            __('first name', 'telegram-bot-for-woocommerce'),
-            __('last name', 'telegram-bot-for-woocommerce'),
-            __('remove', 'telegram-bot-for-woocommerce')
+            __('ID', 'notify-bot-woocommerce'),
+            __('username', 'notify-bot-woocommerce'),
+            __('first name', 'notify-bot-woocommerce'),
+            __('last name', 'notify-bot-woocommerce'),
+            __('remove', 'notify-bot-woocommerce')
         ];
         $table = "<table class=\"wootb-table\"><tr><th>$headers[0]</th><th>$headers[1]</th><th>$headers[2]</th><th>$headers[3]</th><th>$headers[4]</th></tr>";
         foreach ($users as $uid => $user) {
@@ -131,12 +131,12 @@ class OptionPanel extends \WC_Settings_Page
     {
         return [
             'section_title_1' => [
-                'name' => __('Message settings', 'telegram-bot-for-woocommerce'),
+                'name' => __('Message settings', 'notify-bot-woocommerce'),
                 'type' => 'title',
                 'id' => 'wc_settings_tab_wootb_title_1'
             ],
             'message_template' => [
-                'name' => __('template', 'telegram-bot-for-woocommerce'),
+                'name' => __('template', 'notify-bot-woocommerce'),
                 'type' => 'textarea',
                 'id' => 'wootb_setting_template',
                 'class' => 'code',
@@ -144,12 +144,23 @@ class OptionPanel extends \WC_Settings_Page
                 'default' => file_get_contents(WOOTB_PLUGIN_DIR . '/views/default-msg.php'),
                 'custom_attributes' => ['rows' => 10],
             ],
-            'remove_buttons_on_complete' => [
-                'name' => __('Remove btn on complete', 'telegram-bot-for-woocommerce'),
-                'type' => 'checkbox',
-                'id' => 'wootb_remove_buttons',
-                'desc_tip' => false,
-                'desc' => __("Remove message keyboards on order complete.", 'telegram-bot-for-woocommerce')
+            'remove_buttons_on_status' => [
+                'name' => __('Remove btn on status', 'notify-bot-woocommerce'),
+                'type' => 'multiselect',
+                'id' => 'wootb_remove_btn_statuses',
+                'options'  => wc_get_order_statuses(),
+                'class'    => 'wc-enhanced-select',
+                'desc_tip' => true,
+                'desc' => __("Remove message keyboards on order complete.", 'notify-bot-woocommerce')
+            ],
+            'update_on_status' => [
+                'name' => __('Send on specific status', 'notify-bot-woocommerce'),
+                'type' => 'multiselect',
+                'id' => 'wootb_update_statuses',
+                'options'  => wc_get_order_statuses(),
+                'class'    => 'wc-enhanced-select',
+                'desc_tip' => true,
+                'desc' => __("Remove message keyboards on order complete.", 'notify-bot-woocommerce')
             ],
             'section_end' => [
                 'type' => 'sectionend',

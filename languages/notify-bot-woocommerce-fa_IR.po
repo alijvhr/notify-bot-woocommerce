@@ -2,19 +2,19 @@
 # This file is distributed under the GPLv3.
 msgid ""
 msgstr ""
-"Project-Id-Version: Telegram bot for WooCommerce 1.1.0\n"
-"Report-Msgid-Bugs-To: https://github.com/alijvhr/telegram-bot-for-woocommerce\n"
+"Project-Id-Version: Notify Bot for WooCommerce 1.1.0\n"
+"Report-Msgid-Bugs-To: https://github.com/alijvhr/notify-bot-woocommerce\n"
 "Last-Translator: Ali Javaheri <me@alijvhr.com>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "PO-Revision-Date: 2023-07-30T17:48:03+03:30\n"
-"X-Domain: telegram-bot-for-woocommerce\n"
+"X-Domain: notify-bot-woocommerce\n"
 
 msgid "Receive order details and manage them using your telegram"
 msgstr "جزئیات سفارشات را در تلگرام خود دریافت و مدیریت کنید"
 
-msgid "Telegram bot for WooCommerce"
+msgid "Notify Bot for WooCommerce"
 msgstr "بات تلگرام ووکامرس"
 
 msgid "Ali Javaheri"

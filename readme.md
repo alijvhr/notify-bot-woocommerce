@@ -1,10 +1,10 @@
-# Telegram bot for WooCommerce
+# Notify Bot for WooCommerce
 
 Telegram order management plugin for Woocommerce
 
 ## Description
 
-Are you a WooCommerce website administrator looking for an efficient and optimal solution to stay informed about your orders? Look no further! Our Telegram bot for WooCommerce plugin is specifically developed to cater to your needs.
+Are you a WooCommerce website administrator looking for an efficient and optimal solution to stay informed about your orders? Look no further! Our Notify Bot for WooCommerce plugin is specifically developed to cater to your needs.
 
 With this plugin, you can effortlessly update the status of your orders directly from Telegram messages, eliminating the need to access the WordPress admin dashboard. Say goodbye to wasting time checking the order section of your website!
 

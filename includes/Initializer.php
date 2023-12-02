@@ -2,10 +2,11 @@
 
 namespace WoocommerceTelegramBot\includes;
 
-use Safe\Exceptions\VarException;
-
 class Initializer extends Singleton
 {
+
+    const STATUS_CANCEL = 1, STATUS_REFUND = 2, STATUS_COMPLETE = 4, STATUS_PROCESS = 8;
+
     /**@var TelegramAdaptor */
     public $telegram;
 
@@ -15,7 +16,7 @@ class Initializer extends Singleton
     function init()
     {
         $path = dirname(plugin_basename(__FILE__), 2);
-        load_plugin_textdomain('telegram-bot-for-woocommerce', false, "$path/languages/");
+        load_plugin_textdomain('notify-bot-woocommerce', false, "$path/languages/");
         $active_plugins = apply_filters('active_plugins', get_option('active_plugins'));
 
         if (in_array('woocommerce/woocommerce.php', $active_plugins)) {
@@ -38,13 +39,13 @@ class Initializer extends Singleton
 
     function woocommerceNotice()
     {
-        $message = __('Please activate woocommerce on your wp installation in order to use Telegram bot for WooCommerce plugin', 'telegram-bot-for-woocommerce');
+        $message = __('Please activate woocommerce on your wp installation in order to use Notify Bot for WooCommerce plugin', 'notify-bot-woocommerce');
         echo "<div class=\"notice notice-error\"><p>$message</p></div>";
     }
 
     function add_action_links($actions)
     {
-        $configure = __('Configure', 'telegram-bot-for-woocommerce');
+        $configure = __('Configure', 'notify-bot-woocommerce');
         $url = admin_url('admin.php?page=wc-settings&tab=wootb');
         $actions[] = "<a href=\"$url\">$configure</a>";
 
@@ -149,7 +150,7 @@ class Initializer extends Singleton
         if (!isset($schedules['every_minute'])) {
             $schedules['every_minute'] = [
                 'interval' => 60,
-                'display' => __('Every 1 Minute', 'telegram-bot-for-woocommerce'),
+                'display' => __('Every 1 Minute', 'notify-bot-woocommerce'),
             ];
         }
 
@@ -166,8 +167,8 @@ class Initializer extends Singleton
     function sendTestMessage()
     {
         try {
-            $this->sendToAll([], __('This is a test message from Telegram bot for WooCommerce Plugin!', 'telegram-bot-for-woocommerce'));
-            echo json_encode(['error' => 0, 'message' => __('Message successfully sent', 'telegram-bot-for-woocommerce')]);
+            $this->sendToAll([], __('This is a test message from Notify Bot for WooCommerce Plugin!', 'notify-bot-woocommerce'));
+            echo json_encode(['error' => 0, 'message' => __('Message successfully sent', 'notify-bot-woocommerce')]);
             wp_die();
         } catch (\Exception $ex) {
             echo json_encode(['error' => 1, 'message' => $ex->getMessage()]);
@@ -193,7 +194,7 @@ class Initializer extends Singleton
                 } catch (\Exception $e) {
 
                 }
-            } while (!isset($message->ok) && sleep(1) !== false && $tries++ < 5);
+            } while (!isset($message->ok) && usleep(100) !== false && $tries++ < 3);
             if (isset($message->result->message_id)) {
                 $messageIds[$id] = $message->result->message_id;
             }
@@ -262,41 +263,50 @@ class Initializer extends Singleton
         $text = $wc->interpolate(self::getTemplate());
         $messageIds = json_decode(get_post_meta($order_id, 'WooTelegramMessageIds', true) ?: "[]", true);
         $status = $wc->get_status();
-        $keyboard = new TelegramKeyboard(2);
-        $remove_buttons = get_option('wootb_remove_buttons', false);
-        if ($status != 'completed' || !$remove_buttons) {
-            if ($status != 'processing') {
-                $keyboard->add_inline_callback_button('🕙 ' . __('Process', 'telegram-bot-for-woocommerce'), [
-                    "cmd" => "status",
-                    "oid" => $order_id,
-                    "st" => 2
-                ]);
+        $remove_buttons = get_option('wootb_remove_btn_statuses', false);
+        $update_statuses = get_option('wootb_update_statuses', false);
+        $update_always = !$update_statuses;
+        if ($update_always || in_array($status, $update_statuses)) {
+            $keyboard = new TelegramKeyboard(2);
+            $status_buttons = [
+                'processing' => self::STATUS_CANCEL | self::STATUS_COMPLETE | self::STATUS_REFUND,
+                'cancelled' => self::STATUS_PROCESS | self::STATUS_REFUND,
+                'refunded' => self::STATUS_PROCESS,
+                'completed' => self::STATUS_PROCESS
+            ];
+            if ($status != 'completed' || !$remove_buttons) {
+                if ($status != 'processing') {
+                    $keyboard->add_inline_callback_button('🕙 ' . __('Process', 'notify-bot-woocommerce'), [
+                        "cmd" => "status",
+                        "oid" => $order_id,
+                        "st" => 2
+                    ]);
+                }
+                if ($status_buttons[$status] & self::STATUS_CANCEL) {
+                    $keyboard->add_inline_callback_button('❌ ' . __('Cancel', 'notify-bot-woocommerce'), [
+                        "cmd" => "status",
+                        "oid" => $order_id,
+                        "st" => 3
+                    ]);
+                }
+                if ($status_buttons[$status] & self::STATUS_REFUND) {
+                    $keyboard->add_inline_callback_button('💸 ' . __('Refund', 'notify-bot-woocommerce'), [
+                        "cmd" => "status",
+                        "oid" => $order_id,
+                        "st" => 1
+                    ]);
+                }
+                if ($status_buttons[$status] & self::STATUS_COMPLETE) {
+                    $keyboard->add_inline_callback_button('✅ ' . __('Complete', 'notify-bot-woocommerce'), [
+                        "cmd" => "status",
+                        "oid" => $order_id,
+                        "st" => 0
+                    ]);
+                }
             }
-            if ($status != 'cancelled') {
-                $keyboard->add_inline_callback_button('❌ ' . __('Cancel', 'telegram-bot-for-woocommerce'), [
-                    "cmd" => "status",
-                    "oid" => $order_id,
-                    "st" => 3
-                ]);
-            }
-            if ($status != 'refunded') {
-                $keyboard->add_inline_callback_button('💸 ' . __('Refund', 'telegram-bot-for-woocommerce'), [
-                    "cmd" => "status",
-                    "oid" => $order_id,
-                    "st" => 1
-                ]);
-            }
-            if ($status != 'completed') {
-                $keyboard->add_inline_callback_button('✅ ' . __('Complete', 'telegram-bot-for-woocommerce'), [
-                    "cmd" => "status",
-                    "oid" => $order_id,
-                    "st" => 0
-                ]);
-            }
+            $messageIds = $this->sendToAll($messageIds, $text, $keyboard);
+            update_post_meta($order_id, 'WooTelegramMessageIds', json_encode($messageIds));
         }
-        $messageIds = $this->sendToAll($messageIds, $text, $keyboard);
-        update_post_meta($order_id, 'WooTelegramMessageIds', json_encode($messageIds));
-
         return $messageIds;
     }
 

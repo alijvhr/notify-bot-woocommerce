@@ -1,4 +1,4 @@
-== Telegram bot for Woocommerce ==
+== Notify Bot for WooCommerce ==
 Contributors: alijvhr
 Tags: telegram, notification, woocommerce notifier, woocommerce, تلگرام, نوتیفیکیشن, تلگرام, ووکامرس تلگرام
 Tested up to: 6.2
@@ -8,7 +8,7 @@ WC tested up to: 7.9
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
-Telegram bot for WooCommerce: Streamline Order Management Effortlessly
+Notify Bot for WooCommerce: Streamline Order Management Effortlessly
 
 == Description ==
 

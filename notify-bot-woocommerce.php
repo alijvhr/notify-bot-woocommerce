@@ -2,7 +2,7 @@
 
 
 /**
- * Telegram bot for WooCommerce
+ * Notify Bot for WooCommerce
  *
  * @package WoocommerceTelegramBot
  * @version 1.1.0
@@ -10,7 +10,7 @@
  * @author  Ali Javaheri
  *
  * @wordpress-plugin
- * Plugin Name: Telegram bot for WooCommerce
+ * Plugin Name: Notify Bot for WooCommerce
  * Description: Receive order details and manage them using your telegram
  * Author: Ali Javaheri
  * Version: 1.1.0
@@ -19,7 +19,7 @@
  * Requires PHP: 7.3
  * WC requires at least: 3.2
  * WC tested up to: 7.9
- * Text Domain: telegram-bot-for-woocommerce
+ * Text Domain: notify-bot-woocommerce
  * Domain Path: /languages
  * License: GPL v2 or later
  * License URI: http://www.gnu.org/licenses/gpl-2.0.txt

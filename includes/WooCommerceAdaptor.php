@@ -86,6 +86,15 @@ class WooCommerceAdaptor
         $replace['shop.url'] = get_option('siteurl', $_SERVER['HTTP_HOST']);
         $replace['shop.name'] = get_option('blogname', "blog");
         $replace['shop.tag'] = preg_replace('/\W/', '', get_option('blogname', "blog"));
+        $shipping_title = $this->order->get_shipping_method();
+        $payment_method = $this->order->get_payment_method();
+        if ($shipping_title) {
+            $replace['shipping.method_title'] = $shipping_title;
+            $replace['shipping.total'] = $this->format_price($this->order->get_shipping_total());
+        }
+        if ($payment_method) {
+            $replace['payment.method_title'] = $payment_method;
+        }
 
         return $replace;
     }
@@ -123,7 +132,7 @@ class WooCommerceAdaptor
                 if ($product_item) {
                     $price = $this->format_price(wc_get_price_to_display($product_item));
                     $title = is_rtl() ? str_replace(' - ', '‏ - ', $item->get_name()) : $item->get_name();
-                    $product .= sprintf(__("%1\$s : %2\$sQty x %3\$s\n", 'telegram-bot-for-woocommerce'), $title, $item->get_quantity(), $price);
+                    $product .= sprintf(__("%1\$s : %2\$sQty x %3\$s\n", 'notify-bot-woocommerce'), $title, $item->get_quantity(), $price);
                     $item_meta = $item->get_meta_data();
                     if ($item_meta) {
                         if (is_array($item_meta)) {
@@ -138,11 +147,6 @@ class WooCommerceAdaptor
             }
         }
         $detail['products'] = $product;
-        $shipping_title = $this->order->get_shipping_method();
-        if ($shipping_title) {
-            $detail['shipping.method_title'] = $shipping_title;
-            $detail['shipping.total'] = $this->format_price($this->order->get_shipping_total());
-        }
 
         return $detail;
     }
