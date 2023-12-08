@@ -1,6 +1,6 @@
 <?php
 
-namespace WoocommerceTelegramBot\includes;
+namespace WOOTB\includes;
 
 
 use WC_Customer;
@@ -83,7 +83,7 @@ class WooCommerceAdaptor
         $replace['total'] = $this->format_price($this->order->get_total());
         $replace['order.date_created'] = $date;
         $replace['order.date_created_per'] = PersianDate::jdate('d F Y, g:i a', strtotime($date));
-        $replace['shop.url'] = get_option('siteurl', $_SERVER['HTTP_HOST']);
+        $replace['shop.url'] = get_option('siteurl', sanitize_text_field($_SERVER['HTTP_HOST']));
         $replace['shop.name'] = get_option('blogname', "blog");
         $replace['shop.tag'] = preg_replace('/\W/', '', get_option('blogname', "blog"));
         $shipping_title = $this->order->get_shipping_method();

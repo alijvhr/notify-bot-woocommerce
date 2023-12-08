@@ -1,6 +1,6 @@
 <?php
 
-namespace WoocommerceTelegramBot\includes;
+namespace WOOTB\includes;
 
 class TelegramAdaptor
 {
@@ -46,20 +46,9 @@ class TelegramAdaptor
 
         $data = http_build_query($data);
 
-        $ch = curl_init();
-        $timeout = 3;
-
-        curl_setopt($ch, CURLOPT_URL, "$this->reqUrl/$method?$data");
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 1);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 1);
-        $response = curl_exec($ch);
-        if (curl_errno($ch) != 0) throw new \Exception('Cannot connect to telegram!' . curl_error($ch));
-        $response = json_decode($response);
-//        if (!$response->ok) throw new \Exception("$response->error_code: $response->description");
-        curl_close($ch);
-        return $response;
+        $response = wp_remote_get("$this->reqUrl/$method?$data", ['timeout', 1]);
+        if (wp_remote_retrieve_response_code($response) != 200) throw new \Exception('Cannot connect to telegram!' . curl_error($ch));
+        return wp_remote_retrieve_body($response);
     }
 
     public function use_proxy($use = true)

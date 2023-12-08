@@ -1,6 +1,6 @@
 <?php
 
-namespace WoocommerceTelegramBot\includes;
+namespace WOOTB\includes;
 
 class Initializer extends Singleton
 {
@@ -29,7 +29,7 @@ class Initializer extends Singleton
     private function run()
     {
         add_action('plugins_loaded', [$this, 'loadHooks'], 26);
-        add_filter('plugin_action_links_WoocommerceTelegramBot/WoocommerceTelegramBot.php', [
+        add_filter('plugin_action_links_WOOTB/WOOTB.php', [
             $this,
             'add_action_links'
         ]);
@@ -40,7 +40,7 @@ class Initializer extends Singleton
     function woocommerceNotice()
     {
         $message = __('Please activate woocommerce on your wp installation in order to use Notify Bot for WooCommerce plugin', 'notify-bot-woocommerce');
-        echo "<div class=\"notice notice-error\"><p>$message</p></div>";
+        echo '<div class="notice notice-error"><p>'.esc_html($message).'</p></div>';
     }
 
     function add_action_links($actions)
@@ -168,10 +168,10 @@ class Initializer extends Singleton
     {
         try {
             $this->sendToAll([], __('This is a test message from Notify Bot for WooCommerce Plugin!', 'notify-bot-woocommerce'));
-            echo json_encode(['error' => 0, 'message' => __('Message successfully sent', 'notify-bot-woocommerce')]);
+            echo wp_json_encode(['error' => 0, 'message' => __('Message successfully sent', 'notify-bot-woocommerce')]);
             wp_die();
         } catch (\Exception $ex) {
-            echo json_encode(['error' => 1, 'message' => $ex->getMessage()]);
+            echo wp_json_encode(['error' => 1, 'message' => $ex->getMessage()]);
             wp_die();
         }
     }

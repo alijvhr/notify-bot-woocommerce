@@ -1,6 +1,6 @@
 <?php
 
-namespace WoocommerceTelegramBot\includes;
+namespace WOOTB\includes;
 
 class OptionPanel extends \WC_Settings_Page
 {

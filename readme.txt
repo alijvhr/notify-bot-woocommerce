@@ -1,10 +1,10 @@
 == Notify Bot for WooCommerce ==
 Contributors: alijvhr
 Tags: telegram, notification, woocommerce notifier, woocommerce, تلگرام, نوتیفیکیشن, تلگرام, ووکامرس تلگرام
-Tested up to: 6.2
-Stable tag: 1.0.0
+Tested up to: 6.4
+Stable tag: 1.3.0
 WC requires at least: 3.2
-WC tested up to: 7.9
+WC tested up to: 8.3.1
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -35,6 +35,19 @@ Don't let limitations hold you back. Embrace the potential of WooCommerce and re
 
 * WordPress version 5.2.0 or higher
 * WooCommerce version 3.6.0 or higher
+
+== 3rd Party Services ==
+
+1. This plugin uses telegram bot API to send messages in telegram
+Domain: https://api.telegram.org/
+Privacy Policy: https://core.telegram.org/api/terms
+
+2. This plugin uses google charts to create QR code
+Domain: https://chart.googleapis.com/
+Privacy Policy: https://policies.google.com/privacy?hl=en-US
+
+3. This plugin may use my proxy if enabled
+Domain: https://tl.alijvhr.com/
 
 == How to Use ==
 

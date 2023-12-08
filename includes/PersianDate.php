@@ -1,6 +1,6 @@
 <?php
 
-namespace WoocommerceTelegramBot\includes;
+namespace WOOTB\includes;
 
 class PersianDate {
 
@@ -8,10 +8,6 @@ class PersianDate {
 	public static function jdate( $format, $timestamp = '', $none = '', $time_zone = 'Asia/Tehran', $tr_num = 'fa' ) {
 
 		$T_sec = 0;
-
-		if ( $time_zone != 'local' ) {
-			date_default_timezone_set( ( $time_zone === '' ) ? 'Asia/Tehran' : $time_zone );
-		}
 		$ts   = $T_sec + ( ( $timestamp === '' ) ? time() : self::tr_num( $timestamp ) );
 		$date = explode( '_', date( 'H_i_j_n_O_P_s_w_Y', $ts ) );
 		list( $j_y, $j_m, $j_d ) = self::gregorian_to_jalali( $date[8], $date[3], $date[2] );
@@ -230,11 +226,8 @@ class PersianDate {
 	/*	F	*/
 	public function jstrftime( $format, $timestamp = '', $none = '', $time_zone = 'Asia/Tehran', $tr_num = 'fa' ) {
 
-		$T_sec = 0;/* <= رفع خطاي زمان سرور ، با اعداد '+' و '-' بر حسب ثانيه */
+		$T_sec = 0;
 
-		if ( $time_zone != 'local' ) {
-			date_default_timezone_set( ( $time_zone === '' ) ? 'Asia/Tehran' : $time_zone );
-		}
 		$ts   = $T_sec + ( ( $timestamp === '' ) ? time() : self::tr_num( $timestamp ) );
 		$date = explode( '_', date( 'h_H_i_j_n_s_w_Y', $ts ) );
 		list( $j_y, $j_m, $j_d ) = self::gregorian_to_jalali( $date[7], $date[4], $date[3] );
@@ -462,9 +455,7 @@ class PersianDate {
 
 	/*	F	*/
 	function jmktime( $h = '', $m = '', $s = '', $jm = '', $jd = '', $jy = '', $none = '', $timezone = 'Asia/Tehran' ) {
-		if ( $timezone != 'local' ) {
-			date_default_timezone_set( $timezone );
-		}
+
 		if ( $h === '' ) {
 			return time();
 		} else {

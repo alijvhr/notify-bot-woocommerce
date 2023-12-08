@@ -4,8 +4,8 @@
 /**
  * Notify Bot for WooCommerce
  *
- * @package WoocommerceTelegramBot
- * @version 1.1.0
+ * @package WOOTB
+ * @version 1.3.0
  * @license GPL-2.0-or-later
  * @author  Ali Javaheri
  *
@@ -13,50 +13,50 @@
  * Plugin Name: Notify Bot for WooCommerce
  * Description: Receive order details and manage them using your telegram
  * Author: Ali Javaheri
- * Version: 1.1.0
+ * Version: 1.3.0
  * Author URI: https://alijvhr.com
  * Requires at least: 5.2
  * Requires PHP: 7.3
  * WC requires at least: 3.2
- * WC tested up to: 7.9
+ * WC tested up to: 8.3.1
  * Text Domain: notify-bot-woocommerce
  * Domain Path: /languages
  * License: GPL v2 or later
  * License URI: http://www.gnu.org/licenses/gpl-2.0.txt
  */
 
-namespace WoocommerceTelegramBot;
+namespace WOOTB;
 
-use WoocommerceTelegramBot\includes\Initializer;
+use WOOTB\includes\Initializer;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'WOOTB_PLUGIN_VERSION', '1.1.0' );
+define( 'WOOTB_PLUGIN_VERSION', '1.3.0' );
 
 function wootb_auto_loader( $class ) {
-	if ( substr( $class, 0, 22 ) == 'WoocommerceTelegramBot' ) {
-		require __DIR__ . str_replace( '\\', DIRECTORY_SEPARATOR, substr( $class, 22 ) ) . '.php';
+	if ( substr( $class, 0, 5 ) == 'WOOTB' ) {
+		require __DIR__ . str_replace( '\\', DIRECTORY_SEPARATOR, substr( $class, 5 ) ) . '.php';
 	}
 }
 
-spl_autoload_register( 'WoocommerceTelegramBot\\wootb_auto_loader', true, true );
+spl_autoload_register( 'WOOTB\\wootb_auto_loader', true, true );
 
 define( 'WOOTB_PLUGIN_PATH', plugin_dir_path( __FILE__ ) );
 define( 'WOOTB_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'WOOTB_PLUGIN_DIR', __DIR__ );
 define( 'WOOTB_PLUGIN_ICON', plugins_url( "images/ic.png", __FILE__ ) );
 
-/**@var \WoocommerceTelegramBot\includes\Initializer $wootb */
+/**@var Initializer $wootb */
 
 $wootb   = Initializer::getInstance();
 
 $wootb->schedule_events();
-function wooSendUpdates() {
+function wootb_SendUpdates() {
 	global $wootb;
 	$wootb->sendUpdatesToBot();
 }
 
-add_action( 'wootb_send_updates', 'wooSendUpdates' );
+add_action( 'wootb_send_updates', 'wootb_SendUpdates' );
 register_deactivation_hook( __FILE__, [ $wootb, 'deactivate' ] );
