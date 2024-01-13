@@ -18,7 +18,7 @@
  * Requires at least: 5.2
  * Requires PHP: 7.3
  * WC requires at least: 3.2
- * WC tested up to: 8.3.1
+ * WC tested up to: 8.4.0
  * Text Domain: notify-bot-woocommerce
  * Domain Path: /languages
  * License: GPL v2 or later
