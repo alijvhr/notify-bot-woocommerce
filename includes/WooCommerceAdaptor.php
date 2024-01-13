@@ -24,7 +24,9 @@ class WooCommerceAdaptor
         $detail = $this->order_detail($message);
         $detail = $this->extra_detail($detail);
         $detail = $this->product_detail($detail);
-
+		if(!$detail['products']){
+			return null;
+		}
         $detail = apply_filters('wootb_message_interpolate', $detail, $this->order_id);
         foreach ($detail as $key => $val) {
             $message = str_replace('{' . $key . '}', $val, $message);

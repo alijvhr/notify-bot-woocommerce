@@ -36,8 +36,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 define( 'WOOTB_PLUGIN_VERSION', '1.3.0' );
 
 function wootb_auto_loader( $class ) {
-	if ( substr( $class, 0, 5 ) == 'WOOTB' ) {
-		require __DIR__ . str_replace( '\\', DIRECTORY_SEPARATOR, substr( $class, 5 ) ) . '.php';
+	if ( preg_match("/^WOOTB(.*)$/", $class, $matches)) {
+		require __DIR__ . str_replace( '\\', DIRECTORY_SEPARATOR, $matches[1] ) . '.php';
 	}
 }
 
