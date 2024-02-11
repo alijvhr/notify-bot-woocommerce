@@ -10,11 +10,6 @@ jobs:
     steps:
       - uses: actions/checkout@master
 
-      - name: Install dependencies
-        uses: php-actions/composer@v6
-        with:
-          version: 1
-
       - name: WordPress Plugin Deploy
         uses: 10up/action-wordpress-plugin-deploy@stable
         env:
