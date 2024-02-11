@@ -2,7 +2,7 @@
 Contributors: alijvhr
 Tags: telegram, notification, woocommerce notifier, woocommerce, تلگرام, نوتیفیکیشن, تلگرام, ووکامرس تلگرام
 Tested up to: 6.4.2
-Stable tag: 1.3.2
+Stable tag: 1.3.3
 WC requires at least: 3.2
 WC tested up to: 8.4.0
 License: MIT
