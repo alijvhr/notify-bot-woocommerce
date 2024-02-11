@@ -111,7 +111,7 @@ class Initializer extends Singleton {
 			'lname'   => $chat->last_name,
 			'enabled' => true
 		];
-		update_option( 'wootb_setting_users', json_encode( $users ) );
+		update_option( 'wootb_setting_users', wp_json_encode( $users ) );
 	}
 
 	public function remove_wootb_user() {
@@ -124,7 +124,7 @@ class Initializer extends Singleton {
 	public function unregisterUser( $chat_id ) {
 		$users = json_decode( get_option( 'wootb_setting_users' ), true );
 		unset( $users[ $chat_id ] );
-		update_option( 'wootb_setting_users', json_encode( $users ) );
+		update_option( 'wootb_setting_users', wp_json_encode( $users ) );
 	}
 
 	public function schedule_events() {
@@ -210,7 +210,7 @@ class Initializer extends Singleton {
 
 	public function set_queue() {
 		$this->queue = array_values( $this->queue );
-		update_option( 'wootb_send_queue', json_encode( $this->queue ) );
+		update_option( 'wootb_send_queue', wp_json_encode( $this->queue ) );
 	}
 
 	public function deactivate() {
@@ -284,7 +284,7 @@ class Initializer extends Singleton {
 					}
 				}
 				$messageIds = $this->sendToAll( $messageIds, $text, $keyboard );
-				update_post_meta( $order_id, 'WooTelegramMessageIds', json_encode( $messageIds ) );
+				update_post_meta( $order_id, 'WooTelegramMessageIds', wp_json_encode( $messageIds ) );
 			}
 		}
 

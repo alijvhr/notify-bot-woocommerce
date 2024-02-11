@@ -17,7 +17,7 @@ class TelegramKeyboard implements \JsonSerializable
     public function add_inline_callback_button($text, $callback_data)
     {
         if (is_array($callback_data) || is_object($callback_data)) {
-            $callback_data = json_encode($callback_data);
+            $callback_data = wp_json_encode($callback_data);
         }
         $button = ["text" => $text, "callback_data" => $callback_data];
         $this->buttons[] = $button;

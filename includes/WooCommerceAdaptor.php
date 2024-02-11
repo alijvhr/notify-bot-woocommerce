@@ -58,7 +58,7 @@ class WooCommerceAdaptor
                 $value = $value[$key];
             }
             if (is_array($value) || is_object($value)) {
-                $value = json_encode($value, JSON_UNESCAPED_UNICODE);
+                $value = wp_json_encode($value, JSON_UNESCAPED_UNICODE);
             }
             $detail[$match] = $value;
         }

@@ -34,7 +34,7 @@ class TelegramAdaptor {
 		          'parse_mode'                  => 'HTML'
 		];
 		if ( $keyboard ?? 0 ) {
-			$data['reply_markup'] = json_encode( $keyboard );
+			$data['reply_markup'] = wp_json_encode( $keyboard );
 		}
 
 		return $data;
