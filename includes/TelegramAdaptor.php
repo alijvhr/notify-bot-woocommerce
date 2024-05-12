@@ -41,10 +41,10 @@ class TelegramAdaptor {
 	}
 
 	public function request( $method, $data = [] ) {
+		if(!$this->token) return new \stdClass();
 		if ( ! $this->reqUrl ) {
 			$this->reqUrl = "$this->tel_url/bot$this->token";
 		}
-
 		$data = http_build_query( $data );
 
 		$response = wp_remote_get( "$this->reqUrl/$method?$data", [ 'timeout', 1 ] );

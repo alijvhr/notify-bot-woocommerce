@@ -81,10 +81,10 @@ class Initializer extends Singleton {
 				update_option( 'wootb_setting_token', $token );
 				delete_option( 'onftb_setting_token', $token );
 			}
-			$chatIds = get_option( 'wootb_setting_chatid', '63507626' ) ?? get_option( 'onftb_setting_chatid', '' );
+			$chatIds = get_option( 'wootb_setting_chatid', get_option( 'onftb_setting_chatid', '' ) );
+			$complete = true;
 			if ( $chatIds ) {
 				$chatIds  = explode( ',', $chatIds );
-				$complete = true;
 				foreach ( $chatIds as $chat_id ) {
 					$response = $this->telegram->request( 'getChat', [ 'chat_id' => $chat_id ] );
 					if ( $response->ok ) {
@@ -94,12 +94,13 @@ class Initializer extends Singleton {
 						$complete = false;
 					}
 				}
-				if ( $complete ) {
-					delete_option( 'wootb_setting_chatid' );
-				}
+			}
+			if ( $complete ) {
+				delete_option( 'wootb_setting_chatid' );
 			}
 		}
 		update_option( 'wootb_version', WOOTB_PLUGIN_VERSION );
+		update_option('wootb_setting_otp', md5(time()));
 	}
 
 	public function registerUser( $chat ) {
@@ -153,8 +154,9 @@ class Initializer extends Singleton {
 	function sendTestMessage() {
 		try {
 			$this->sendToAll( [], __( 'This is a test message from Notify Bot for WooCommerce Plugin!', 'notify-bot-woocommerce' ) );
-			echo wp_json_encode( [ 'error'   => 0,
-			                       'message' => __( 'Message successfully sent', 'notify-bot-woocommerce' )
+			echo wp_json_encode( [
+				'error'   => 0,
+				'message' => __( 'Message successfully sent', 'notify-bot-woocommerce' )
 			] );
 			wp_die();
 		} catch ( \Exception $ex ) {
@@ -251,7 +253,8 @@ class Initializer extends Singleton {
 					'processing' => self::STATUS_CANCEL | self::STATUS_COMPLETE | self::STATUS_REFUND,
 					'cancelled'  => self::STATUS_PROCESS | self::STATUS_REFUND,
 					'refunded'   => self::STATUS_PROCESS,
-					'completed'  => self::STATUS_PROCESS
+					'completed'  => self::STATUS_PROCESS,
+					'pending payment' => self::STATUS_PROCESS
 				];
 				if ( $status != 'completed' || ! $remove_buttons ) {
 					if ( $status != 'processing' ) {
