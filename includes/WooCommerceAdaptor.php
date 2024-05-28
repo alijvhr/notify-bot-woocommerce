@@ -140,7 +140,7 @@ class WooCommerceAdaptor {
 					}
 					$price     = $this->format_price( wc_get_price_to_display( $product_item ) );
 					$title     = is_rtl() ? str_replace( ' - ', '‏ - ', $item->get_name() ) : $item->get_name();
-					$product   .= $link[0] . $title . $link[1] . ' : ' . sprintf( __( "%1\$sQty x %2\$s", 'notify-bot-woocommerce' ), $item->get_quantity(), $price ) . "\n";
+					$product   .= $link[0] . $title . $link[1] . ' : ' . sprintf( __( '%1$sQty x %2$s', 'notify-bot-woocommerce' ), $item->get_quantity(), $price ) . "\n";
 					$item_meta = $item->get_meta_data();
 					if ( $item_meta ) {
 						if ( is_array( $item_meta ) ) {
