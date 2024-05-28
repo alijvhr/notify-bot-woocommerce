@@ -81,7 +81,7 @@ class WooCommerceAdaptor
             'completed' => '✅',
             'cancelled' => '❌',
             'refunded' => '💸'
-        ][$this->order->get_status()];
+        ][$this->order->get_status()]??'🛒';
         $replace['total'] = $this->format_price($this->order->get_total());
         $replace['order.date_created'] = $date;
         $replace['order.date_created_per'] = PersianDate::jdate('d F Y, g:i a', strtotime($date));
@@ -128,13 +128,14 @@ class WooCommerceAdaptor
         $items = $this->order->get_items();
         $product_meta = "";
         $product = chr(10);
+	    $url = get_option('siteurl', sanitize_text_field($_SERVER['HTTP_HOST']));
         if (!empty($items)) {
             foreach ($items as $item) {
                 $product_item = $item->get_product();
                 if ($product_item) {
                     $price = $this->format_price(wc_get_price_to_display($product_item));
                     $title = is_rtl() ? str_replace(' - ', '‏ - ', $item->get_name()) : $item->get_name();
-                    $product .= sprintf(__("%1\$s : %2\$sQty x %3\$s\n", 'notify-bot-woocommerce'), $title, $item->get_quantity(), $price);
+                    $product .= "<a href=\"$url/wp-admin/post.php?post={$item->get_product_id()}&action=edit\">".sprintf(__("%1\$s : %2\$sQty x %3\$s\n", 'notify-bot-woocommerce'), $title, $item->get_quantity(), $price)."</a>\n";
                     $item_meta = $item->get_meta_data();
                     if ($item_meta) {
                         if (is_array($item_meta)) {
