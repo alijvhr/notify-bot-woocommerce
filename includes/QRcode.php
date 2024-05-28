@@ -1,5 +1,7 @@
 <?php
 
+namespace WOOTB\includes;
+
 /*
  * PHP QR Code encoder
  *

@@ -2,10 +2,6 @@
 
 namespace WOOTB\includes;
 
-use QRcode;
-
-require_once __DIR__ . '/phpqrcode.php';
-
 class OptionPanel extends \WC_Settings_Page {
 
 	/**
