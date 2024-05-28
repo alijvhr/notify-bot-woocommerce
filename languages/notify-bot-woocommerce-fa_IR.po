@@ -87,7 +87,7 @@ msgid "Remove btn on complete"
 msgstr "حذف دکمه ها با تکمیل سفارش"
 
 msgid "%1$sQty x %2$s"
-msgstr "%1$sعدد با قیمت %2$s\n"
+msgstr "%1$sعدد با قیمت %2$s"
 
 msgid "Bot start link"
 msgstr "لینک استارت بات"
