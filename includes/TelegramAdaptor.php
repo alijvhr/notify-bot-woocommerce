@@ -48,9 +48,9 @@ class TelegramAdaptor {
 		$data = http_build_query( $data );
 
 		$response = wp_remote_get( "$this->reqUrl/$method?$data", [ 'timeout', 1 ] );
-		if ( wp_remote_retrieve_response_code( $response ) != 200 ) {
-			throw new \Exception( 'Cannot connect to telegram!' );
-		}
+//		if ( wp_remote_retrieve_response_code( $response ) != 200 ) {
+//			throw new \Exception( 'Cannot connect to telegram!' );
+//		}
 
 		return json_decode( wp_remote_retrieve_body( $response ) );
 	}
@@ -62,7 +62,6 @@ class TelegramAdaptor {
 	public function updateMessage( $chatId, $message_id, $text, $keyboard = null ) {
 		$data               = $this->prepare( $chatId, $text, $keyboard );
 		$data['message_id'] = $message_id;
-
 		return $this->request( 'editMessageText', $data );
 	}
 

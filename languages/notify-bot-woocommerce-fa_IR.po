@@ -2,7 +2,7 @@
 # This file is distributed under the GPLv3.
 msgid ""
 msgstr ""
-"Project-Id-Version: Notify Bot for WooCommerce 1.4.0\n"
+"Project-Id-Version: Notify Bot for WooCommerce 2.0.0\n"
 "Report-Msgid-Bugs-To: https://github.com/alijvhr/notify-bot-woocommerce\n"
 "Last-Translator: Ali Javaheri <me@alijvhr.com>\n"
 "MIME-Version: 1.0\n"
@@ -86,5 +86,20 @@ msgstr "دکمه های زیر پیام با تکمیل سفارش حذف شون
 msgid "Remove btn on complete"
 msgstr "حذف دکمه ها با تکمیل سفارش"
 
-msgid "%1$s : %2$sQty x %3$s\n"
-msgstr "%1$s : %2$sعدد با قیمت %3$s\n"
+msgid "%1$sQty x %2$s\n"
+msgstr "%1$sعدد با قیمت %2$s\n"
+
+msgid "Bot start link"
+msgstr "لینک استارت بات"
+
+msgid "Bot in group start link"
+msgstr "لینک استارت بات در گروه"
+
+msgid "none"
+msgstr "هیچکدام"
+
+msgid "edit"
+msgstr "ویرایش"
+
+msgid "view"
+msgstr "نمایش"

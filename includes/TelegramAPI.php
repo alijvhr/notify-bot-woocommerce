@@ -25,6 +25,19 @@ class TelegramAPI extends Singleton {
 				'args'                => []
 			]
 		] );
+		register_rest_route( 'wootb/telegram', "/sendmsgs", [
+			[
+				'methods'             => \WP_REST_Server::ALLMETHODS,
+				'callback'            => [ $this, 'sendmsgs' ],
+				'permission_callback' => '__return_true',
+				'args'                => []
+			]
+		] );
+	}
+
+
+	public function sendmsgs() {
+		trigger_error('doinnnss', E_USER_WARNING);
 	}
 
 
@@ -62,9 +75,10 @@ class TelegramAPI extends Singleton {
 	}
 
 	public function command( $object ) {
-		preg_match( '/^\/(\w++)\s++(.++)$/ism', $object->message->text, $matches );
+		preg_match( '/^\/(\w++)\S++\s++(.++)$/ism', $object->message->text, $matches );
 		$cmd = $matches[1];
 		$arg = $matches[2];
+
 		switch ( $cmd ) {
 			case 'start':
 				$otp   = get_option( 'wootb_setting_otp' );

@@ -56,13 +56,14 @@ class Initializer extends Singleton {
 		add_filter( 'woocommerce_get_settings_pages', [ $this, 'addWooSettingSection' ] );
 		add_action( 'admin_enqueue_scripts', [ $this, 'admin_enqueue_script' ] );
 		add_action( 'save_post_shop_order', [ $this, 'woocommerce_new_order' ] );
-		add_action( 'save_post_shop_order', [ $this, 'sendUpdatesToBot' ] );
+//		add_action( 'save_post_shop_order', [ $this, 'sendUpdatesToBot' ] );
 		add_action( 'woocommerce_checkout_order_processed', [ $this, 'woocommerce_new_order' ] );
-		add_action( 'woocommerce_checkout_order_processed', [ $this, 'sendUpdatesToBot' ] );
+//		add_action( 'woocommerce_checkout_order_processed', [ $this, 'sendUpdatesToBot' ] );
 		add_action( 'woocommerce_order_status_changed', [ $this, 'woocommerce_new_order' ] );
-		add_action( 'woocommerce_order_status_changed', [ $this, 'sendUpdatesToBot' ] );
-		add_filter( 'cron_schedules', [ $this, 'add_minute_cron' ] );
+//		add_action( 'woocommerce_order_status_changed', [ $this, 'sendUpdatesToBot' ] );
+//		add_filter( 'cron_schedules', [ $this, 'add_minute_cron' ] );
 		add_action( 'admin_action_remove_wootb_user', [ $this, 'remove_wootb_user' ] );
+		add_action( 'shutdown', [ $this, 'sendUpdatesToBot' ] );
 	}
 
 	private function initTelegramBot() {
@@ -107,9 +108,9 @@ class Initializer extends Singleton {
 		$users              = json_decode( get_option( 'wootb_setting_users' ), true );
 		$users[ $chat->id ] = [
 			'id'      => $chat->id,
-			'uname'   => $chat->username,
-			'fname'   => $chat->first_name,
-			'lname'   => $chat->last_name,
+			'uname'   => $chat->username ?? $chat->title,
+			'fname'   => $chat->first_name ?? $chat->title,
+			'lname'   => $chat->last_name ?? '',
 			'enabled' => true
 		];
 		update_option( 'wootb_setting_users', wp_json_encode( $users ) );
@@ -167,24 +168,30 @@ class Initializer extends Singleton {
 
 	public function sendToAll( $messageIds, $text, $keyboard = null ) {
 		$chats = json_decode( get_option( 'wootb_setting_users' ), true );
+		$md5   = md5( $text );
 		foreach ( $chats as $id => $chat ) {
-			$tries = $message = 0;
+			$message = null;
+			$tries   = 0;
 			do {
 				try {
 					if ( isset( $messageIds[ $id ] ) ) {
-						$message = $this->telegram->updateMessage( $id, $messageIds[ $id ], $text, $keyboard );
-						if ( ! $message->ok && $message->description == "Bad Request: message to edit not found" ) {
-							unset( $messageIds[ $id ], $message->ok );
+						$msg = explode( ',', $messageIds[ $id ] );
+						if ( isset( $msg[1] ) && $msg[1] == $md5 ) {
+							break;
 						}
-					} else {
-						$message = $this->telegram->sendMessage( $id, $text, $keyboard );
+						$message = $this->telegram->updateMessage( $id, $msg[0], $text, $keyboard );
+						if ( isset( $message->ok ) && $message->ok ) {
+							break;
+						}
+						unset( $messageIds[ $id ], $message->ok );
 					}
+					$message = $this->telegram->sendMessage( $id, $text, $keyboard );
 				} catch ( \Exception $e ) {
 
 				}
-			} while ( ! isset( $message->ok ) && usleep( 100 ) !== false && $tries ++ < 3 );
+			} while ( ! isset( $message->ok ) && $tries ++ < 3 );
 			if ( isset( $message->result->message_id ) ) {
-				$messageIds[ $id ] = $message->result->message_id;
+				$messageIds[ $id ] = "{$message->result->message_id},$md5";
 			}
 		}
 
@@ -193,6 +200,10 @@ class Initializer extends Singleton {
 
 	public function woocommerce_new_order( $order_id ) {
 		$this->addToUpdateQueue( $order_id );
+		ob_flush();
+		flush();
+//		$this->sendUpdatesToBot();
+//		get_headers( site_url( "/wp-json/wootb/telegram/sendmsgs" ) );
 	}
 
 	public function addToUpdateQueue( $order_id ) {
@@ -200,12 +211,11 @@ class Initializer extends Singleton {
 		if ( ! in_array( $order_id, $this->queue ) ) {
 			$this->queue[] = $order_id;
 		}
+		$this->set_queue();
 	}
 
 	public function get_queue() {
-		if ( ! isset( $this->queue ) ) {
-			$this->queue = json_decode( get_option( 'wootb_send_queue', "[]" ), true );
-		}
+		$this->queue = json_decode( get_option( 'wootb_send_queue', "[]" ), true );
 
 		return $this->queue;
 	}
@@ -225,12 +235,15 @@ class Initializer extends Singleton {
 	}
 
 	public function sendUpdatesToBot() {
-		$this->queue = $this->get_queue();
-		$chatIds     = json_decode( get_option( 'wootb_setting_users' ), true );
-		$chatCount   = count( $chatIds );
+		$this->get_queue();
+		if ( ! $this->queue ) {
+			return;
+		}
+		$chatIds   = json_decode( get_option( 'wootb_setting_users' ), true );
+		$chatCount = count( $chatIds );
 		foreach ( $this->queue as $key => $order_id ) {
 			$sentCount = count( $this->sendUpdateToBot( $order_id ) );
-			if ( $chatCount == $sentCount ) {
+			if ( $chatCount <= $sentCount ) {
 				unset( $this->queue[ $key ] );
 			}
 		}
@@ -242,11 +255,11 @@ class Initializer extends Singleton {
 		$wc         = new WooCommerceAdaptor( $order_id );
 		$text       = $wc->interpolate( self::getTemplate() );
 		$messageIds = json_decode( get_post_meta( $order_id, 'WooTelegramMessageIds', true ) ?: "[]", true );
-		if ( isset( $text ) ) {
-			$status          = $wc->get_status();
-			$remove_buttons  = get_option( 'wootb_remove_btn_statuses', false );
-			$update_statuses = get_option( 'wootb_update_statuses', false );
-			$update_always   = ! $update_statuses;
+		$status     = $wc->get_status();
+		if ( isset( $text )) {
+			$remove_buttons       = get_option( 'wootb_remove_btn_statuses', false );
+			$update_statuses      = get_option( 'wootb_update_statuses', false );
+			$update_always        = ! $update_statuses;
 			if ( $update_always || in_array( $status, $update_statuses ) ) {
 				$keyboard       = new TelegramKeyboard( 2 );
 				$status_buttons = [
