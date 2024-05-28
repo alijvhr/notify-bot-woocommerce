@@ -2,6 +2,8 @@
 
 namespace WOOTB\includes;
 
+use Exception;
+
 class Initializer extends Singleton {
 
 	const STATUS_CANCEL = 1, STATUS_REFUND = 2, STATUS_COMPLETE = 4, STATUS_PROCESS = 8;
@@ -174,6 +176,7 @@ class Initializer extends Singleton {
 			$tries   = 0;
 			do {
 				try {
+
 					if ( isset( $messageIds[ $id ] ) ) {
 						$msg = explode( ',', $messageIds[ $id ] );
 						if ( isset( $msg[1] ) && $msg[1] == $md5 ) {
@@ -182,17 +185,20 @@ class Initializer extends Singleton {
 						$message = $this->telegram->updateMessage( $id, $msg[0], $text, $keyboard );
 						if ( isset( $message->ok ) && $message->ok ) {
 							break;
+						} elseif ( ! isset( $message->error_code ) || $message->error_code != 400 ) {
+							continue;
 						}
 						unset( $messageIds[ $id ], $message->ok );
 					}
 					$message = $this->telegram->sendMessage( $id, $text, $keyboard );
-				} catch ( \Exception $e ) {
-
+				} catch ( Exception $exception ) {
+					trigger_error($exception->getMessage(), 512);
 				}
 			} while ( ! isset( $message->ok ) && $tries ++ < 3 );
 			if ( isset( $message->result->message_id ) ) {
 				$messageIds[ $id ] = "{$message->result->message_id},$md5";
 			}
+
 		}
 
 		return $messageIds;
@@ -207,11 +213,47 @@ class Initializer extends Singleton {
 	}
 
 	public function addToUpdateQueue( $order_id ) {
-		$this->get_queue();
+		ignore_user_abort( true );
+//		$this->get_queue();
 		if ( ! in_array( $order_id, $this->queue ) ) {
 			$this->queue[] = $order_id;
 		}
+//		$this->set_queue();
+	}
+
+	public function deactivate() {
+		$this->unschedule_events();
+	}
+
+	public function unschedule_events() {
+		$timestamp = wp_next_scheduled( 'wootb_send_updates' );
+		wp_unschedule_event( $timestamp, 'wootb_send_updates' );
+	}
+
+	public function sendUpdatesToBot() {
+		if ( ! $this->queue ) {
+			$this->get_queue();
+			if ( ! $this->queue ) {
+				return;
+			}
+			ignore_user_abort( true );
+			$queue       = $this->queue;
+			$this->queue = [];
+			$this->set_queue();
+		} else {
+			$queue = $this->queue;
+		}
+		$chatIds   = json_decode( get_option( 'wootb_setting_users' ), true );
+		$chatCount = count( $chatIds );
+		foreach ( $queue as $key => $order_id ) {
+			$sentCount = count( $this->sendUpdateToBot( $order_id ) );
+			if ( $chatCount <= $sentCount ) {
+				unset( $queue[ $key ] );
+			}
+		}
+		$this->queue = $queue;
 		$this->set_queue();
+
 	}
 
 	public function get_queue() {
@@ -225,41 +267,15 @@ class Initializer extends Singleton {
 		update_option( 'wootb_send_queue', wp_json_encode( $this->queue ) );
 	}
 
-	public function deactivate() {
-		$this->unschedule_events();
-	}
-
-	public function unschedule_events() {
-		$timestamp = wp_next_scheduled( 'wootb_send_updates' );
-		wp_unschedule_event( $timestamp, 'wootb_send_updates' );
-	}
-
-	public function sendUpdatesToBot() {
-		$this->get_queue();
-		if ( ! $this->queue ) {
-			return;
-		}
-		$chatIds   = json_decode( get_option( 'wootb_setting_users' ), true );
-		$chatCount = count( $chatIds );
-		foreach ( $this->queue as $key => $order_id ) {
-			$sentCount = count( $this->sendUpdateToBot( $order_id ) );
-			if ( $chatCount <= $sentCount ) {
-				unset( $this->queue[ $key ] );
-			}
-		}
-		$this->set_queue();
-
-	}
-
 	public function sendUpdateToBot( $order_id ) {
 		$wc         = new WooCommerceAdaptor( $order_id );
 		$text       = $wc->interpolate( self::getTemplate() );
 		$messageIds = json_decode( get_post_meta( $order_id, 'WooTelegramMessageIds', true ) ?: "[]", true );
 		$status     = $wc->get_status();
-		if ( isset( $text )) {
-			$remove_buttons       = get_option( 'wootb_remove_btn_statuses', false );
-			$update_statuses      = get_option( 'wootb_update_statuses', false );
-			$update_always        = ! $update_statuses;
+		if ( isset( $text ) ) {
+			$remove_buttons  = get_option( 'wootb_remove_btn_statuses', false );
+			$update_statuses = get_option( 'wootb_update_statuses', false );
+			$update_always   = ! $update_statuses;
 			if ( $update_always || in_array( $status, $update_statuses ) ) {
 				$keyboard       = new TelegramKeyboard( 2 );
 				$status_buttons = [

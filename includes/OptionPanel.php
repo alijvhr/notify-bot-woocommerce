@@ -64,7 +64,7 @@ class OptionPanel extends \WC_Settings_Page {
 		$bot_uname    = get_option( 'wootb_bot_username' );
 		$link         = "https://t.me/$bot_uname?start=$otp";
 		$link_group   = "https://t.me/$bot_uname?startgroup=$otp";
-		$stream       = fopen( 'php://memory', 'w+' );
+		$stream       = fopen( 'php://memory', 'r+' );
 		QRcode::png( $link, $stream, QR_ECLEVEL_H, 7 );
 		$qr = base64_encode( stream_get_contents( $stream, null, 0 ) );
 		ftruncate( $stream, 0 );
