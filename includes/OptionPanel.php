@@ -60,17 +60,20 @@ class OptionPanel extends \WC_Settings_Page {
 	}
 
 	public function get_settings_for_register_section() {
-		$otp          = get_option( 'wootb_setting_otp' );
-		$bot_uname    = get_option( 'wootb_bot_username' );
-		$link         = "https://t.me/$bot_uname?start=$otp";
-		$link_group   = "https://t.me/$bot_uname?startgroup=$otp";
-		$stream       = fopen( 'php://memory', 'r+' );
-		QRcode::png( $link, $stream, QR_ECLEVEL_H, 7 );
-		$qr = base64_encode( stream_get_contents( $stream, null, 0 ) );
-		ftruncate( $stream, 0 );
-		QRcode::png( $link_group, $stream, QR_ECLEVEL_H, 7 );
-		$group_qr = base64_encode( stream_get_contents( $stream, null, 0 ) );
-		fclose($stream);
+		$otp        = get_option( 'wootb_setting_otp' );
+		$bot_uname  = get_option( 'wootb_bot_username' );
+		$link       = "https://t.me/$bot_uname?start=$otp";
+		$link_group = "https://t.me/$bot_uname?startgroup=$otp";
+		if ( extension_loaded( 'gd' ) && function_exists( 'gd_info' ) ) {
+			$file_link  = wp_upload_dir() . '/../wootb_link.png';
+			$file_group = wp_upload_dir() . '/../wootb_group.png';
+			QRcode::png( $link, $file_link, QR_ECLEVEL_H, 7 );
+			$qr = base64_encode( file_get_contents( $file_link ) );
+			QRcode::png( $link_group, $file_group, QR_ECLEVEL_H, 7 );
+			$group_qr = base64_encode( file_get_contents( $file_group ) );
+		} else {
+			$qr = $group_qr = '';
+		}
 
 		return [
 			'link_title'    => [
@@ -92,7 +95,7 @@ class OptionPanel extends \WC_Settings_Page {
 				'type' => 'info',
 				'text' => "<a href=\"$link_group\">$link_group</a>"
 			],
-			'group_qr'   => [
+			'group_qr'      => [
 				'type' => 'info',
 				'text' => "<a href=\"$link_group\"><img src=\"data:image/png;base64,$group_qr\"></a>"
 			],
@@ -153,11 +156,15 @@ class OptionPanel extends \WC_Settings_Page {
 				'default'           => file_get_contents( WOOTB_PLUGIN_DIR . '/views/defaultMessage.php' ),
 				'custom_attributes' => [ 'rows' => 10 ],
 			],
-			'link_products' => [
-				'name'     => __( 'Link products to', 'notify-bot-woocommerce' ),
-				'type'     => 'select',
-				'id'       => 'wootb_link_mode',
-				'options'  => ['none'=>__('none', 'notify-bot-woocommerce'),'edit'=>__('edit', 'notify-bot-woocommerce'),'view'=>__('view', 'notify-bot-woocommerce')],
+			'link_products'            => [
+				'name'    => __( 'Link products to', 'notify-bot-woocommerce' ),
+				'type'    => 'select',
+				'id'      => 'wootb_link_mode',
+				'options' => [
+					'none' => __( 'none', 'notify-bot-woocommerce' ),
+					'edit' => __( 'edit', 'notify-bot-woocommerce' ),
+					'view' => __( 'view', 'notify-bot-woocommerce' )
+				],
 			],
 			'remove_buttons_on_status' => [
 				'name'     => __( 'Remove btn on status', 'notify-bot-woocommerce' ),
