@@ -141,7 +141,7 @@ class OptionPanel extends \WC_Settings_Page
                 'id' => 'wootb_setting_template',
                 'class' => 'code',
                 'css' => 'max-width:550px;width:100%;',
-                'default' => file_get_contents(WOOTB_PLUGIN_DIR . '/views/default-msg.php'),
+                'default' => file_get_contents(WOOTB_PLUGIN_DIR . '/views/defaultMessage.php'),
                 'custom_attributes' => ['rows' => 10],
             ],
             'remove_buttons_on_status' => [
