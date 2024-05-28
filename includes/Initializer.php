@@ -81,10 +81,10 @@ class Initializer extends Singleton {
 				update_option( 'wootb_setting_token', $token );
 				delete_option( 'onftb_setting_token', $token );
 			}
-			$chatIds = get_option( 'wootb_setting_chatid', get_option( 'onftb_setting_chatid', '' ) );
+			$chatIds  = get_option( 'wootb_setting_chatid', get_option( 'onftb_setting_chatid', '' ) );
 			$complete = true;
 			if ( $chatIds ) {
-				$chatIds  = explode( ',', $chatIds );
+				$chatIds = explode( ',', $chatIds );
 				foreach ( $chatIds as $chat_id ) {
 					$response = $this->telegram->request( 'getChat', [ 'chat_id' => $chat_id ] );
 					if ( $response->ok ) {
@@ -100,7 +100,7 @@ class Initializer extends Singleton {
 			}
 		}
 		update_option( 'wootb_version', WOOTB_PLUGIN_VERSION );
-		update_option('wootb_setting_otp', md5(time()));
+		update_option( 'wootb_setting_otp', md5( time() ) );
 	}
 
 	public function registerUser( $chat ) {
@@ -250,10 +250,10 @@ class Initializer extends Singleton {
 			if ( $update_always || in_array( $status, $update_statuses ) ) {
 				$keyboard       = new TelegramKeyboard( 2 );
 				$status_buttons = [
-					'processing' => self::STATUS_CANCEL | self::STATUS_COMPLETE | self::STATUS_REFUND,
-					'cancelled'  => self::STATUS_PROCESS | self::STATUS_REFUND,
-					'refunded'   => self::STATUS_PROCESS,
-					'completed'  => self::STATUS_PROCESS,
+					'processing'      => self::STATUS_CANCEL | self::STATUS_COMPLETE | self::STATUS_REFUND,
+					'cancelled'       => self::STATUS_PROCESS | self::STATUS_REFUND,
+					'refunded'        => self::STATUS_PROCESS,
+					'completed'       => self::STATUS_PROCESS,
 					'pending payment' => self::STATUS_PROCESS
 				];
 				if ( $status != 'completed' || ! $remove_buttons ) {
@@ -264,26 +264,28 @@ class Initializer extends Singleton {
 							"st"  => 2
 						] );
 					}
-					if ( $status_buttons[ $status ] & self::STATUS_CANCEL ) {
-						$keyboard->add_inline_callback_button( '❌ ' . __( 'Cancel', 'notify-bot-woocommerce' ), [
-							"cmd" => "status",
-							"oid" => $order_id,
-							"st"  => 3
-						] );
-					}
-					if ( $status_buttons[ $status ] & self::STATUS_REFUND ) {
-						$keyboard->add_inline_callback_button( '💸 ' . __( 'Refund', 'notify-bot-woocommerce' ), [
-							"cmd" => "status",
-							"oid" => $order_id,
-							"st"  => 1
-						] );
-					}
-					if ( $status_buttons[ $status ] & self::STATUS_COMPLETE ) {
-						$keyboard->add_inline_callback_button( '✅ ' . __( 'Complete', 'notify-bot-woocommerce' ), [
-							"cmd" => "status",
-							"oid" => $order_id,
-							"st"  => 0
-						] );
+					if ( isset( $status_buttons[ $status ] ) ) {
+						if ( $status_buttons[ $status ] & self::STATUS_CANCEL ) {
+							$keyboard->add_inline_callback_button( '❌ ' . __( 'Cancel', 'notify-bot-woocommerce' ), [
+								"cmd" => "status",
+								"oid" => $order_id,
+								"st"  => 3
+							] );
+						}
+						if ( $status_buttons[ $status ] & self::STATUS_REFUND ) {
+							$keyboard->add_inline_callback_button( '💸 ' . __( 'Refund', 'notify-bot-woocommerce' ), [
+								"cmd" => "status",
+								"oid" => $order_id,
+								"st"  => 1
+							] );
+						}
+						if ( $status_buttons[ $status ] & self::STATUS_COMPLETE ) {
+							$keyboard->add_inline_callback_button( '✅ ' . __( 'Complete', 'notify-bot-woocommerce' ), [
+								"cmd" => "status",
+								"oid" => $order_id,
+								"st"  => 0
+							] );
+						}
 					}
 				}
 				$messageIds = $this->sendToAll( $messageIds, $text, $keyboard );
