@@ -212,13 +212,13 @@ class OptionPanel extends WC_Settings_Page {
 				update_option( 'wootb_bot_update_time', time() );
 			} else {
 				$desc = $response->description ?? '';
-				WC_Admin_Settings::add_error(__( 'Error on validating bot api_key. ' ).$desc);
+				WC_Admin_Settings::add_error( __( 'Error on validating bot api_key. ' ) . $desc );
 			}
 			update_option( 'wootb_bot_username', $uname );
 			update_option( 'wootb_setting_otp', md5( time() ) );
 		} else {
 			$desc = $response->description ?? '';
-			add_settings_error( 'wc-settings', 'wootb_bot_error', __( 'Error on validating bot api_key. ' ).$desc, 'success' );
+			WC_Admin_Settings::add_error( __( 'Error on validating bot api_key. ' ) . $desc );
 		}
 	}
 }
