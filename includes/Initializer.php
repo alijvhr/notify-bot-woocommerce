@@ -110,7 +110,7 @@ class Initializer extends Singleton {
 		$users              = json_decode( get_option( 'wootb_setting_users' ), true );
 		$users[ $chat->id ] = [
 			'id'      => $chat->id,
-			'uname'   => $chat->username ?? $chat->title,
+			'uname'   => $chat->username ?? '',
 			'fname'   => $chat->first_name ?? $chat->title,
 			'lname'   => $chat->last_name ?? '',
 			'enabled' => true
