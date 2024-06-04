@@ -335,7 +335,7 @@ class Initializer extends Singleton {
 			"billing-postcode",
 			"billing-email",
 			"billing-phone"
-		], get_option( 'wootb_setting_template' ) );
+		], get_option( 'wootb_setting_template', file_get_contents( WOOTB_PLUGIN_DIR . '/views/defaultMessage.php' ) ) );
 	}
 
 	public function addWooSettingSection( $settings ) {
