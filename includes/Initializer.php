@@ -77,31 +77,6 @@ class Initializer extends Singleton {
 
 	public function update() {
 		$old_version = get_option( 'wootb_version', '0.0.0' );
-		if ( version_compare( $old_version, '1.0.3', '<' ) ) {
-			// Update old version chat IDs without restarting the bot
-			$token = get_option( 'onftb_setting_token', false );
-			if ( $token ) {
-				update_option( 'wootb_setting_token', $token );
-				delete_option( 'onftb_setting_token', $token );
-			}
-			$chatIds  = get_option( 'wootb_setting_chatid', get_option( 'onftb_setting_chatid', '' ) );
-			$complete = true;
-			if ( $chatIds ) {
-				$chatIds = explode( ',', $chatIds );
-				foreach ( $chatIds as $chat_id ) {
-					$response = $this->telegram->request( 'getChat', [ 'chat_id' => $chat_id ] );
-					if ( $response->ok ) {
-						$chat = $response->result;
-						$this->registerUser( $chat );
-					} else {
-						$complete = false;
-					}
-				}
-			}
-			if ( $complete ) {
-				delete_option( 'wootb_setting_chatid' );
-			}
-		}
 		update_option( 'wootb_version', WOOTB_PLUGIN_VERSION );
 		update_option( 'wootb_setting_otp', md5( time() ) );
 	}
