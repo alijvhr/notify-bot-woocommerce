@@ -28,7 +28,7 @@ class Initializer extends Singleton {
 
 	private function run() {
 		add_action( 'plugins_loaded', [ $this, 'loadHooks' ], 26 );
-		add_filter( 'plugin_action_links_WOOTB/WOOTB.php', [
+		add_filter( 'plugin_action_links_notify-bot-woocommerce/notify-bot-woocommerce.php', [
 			$this,
 			'add_action_links'
 		] );
