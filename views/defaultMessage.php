@@ -1,4 +1,4 @@
-{order.icon} Status: <b><u>{order.status}<</u></b>
+{order.icon} Status: <b><u>{order.status}</u></b>
 #order_{order.d}
 Order ID: <b><a href="{order.edit_url">{order.id}</a></b>
 🗓 Order creation time: {order.date_created_per}
