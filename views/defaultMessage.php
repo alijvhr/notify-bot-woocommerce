@@ -1,14 +1,16 @@
-{order_icon} Status: <b><u>{order_status}</u></b>
-#order_{order_id}
-Order ID: <b><a href="{site_url}/wp-admin/post.php?post={order_id}&amp;action=edit">{order_id}</a></b>
-🗓 Order creation time: {order_date_created_per}
+{order.icon} Status: <b><u>{order.status}<</u></b>
+#order_{order.d}
+Order ID: <b><a href="{order.edit_url">{order.id}</a></b>
+🗓 Order creation time: {order.date_created_per}
 ------------------
 📃 Products: {products}
 💲 Total: {total}
+🚚 Shipping fee: {shipping.total}
 ------------------
-Recipient: {billing_first_name} {billing_last_name}
-Address: {billing_state} - {billing_city} - {billing_address_1} - {billing_address_2}
-Phone: {billing_phone}
-Zip/Postal Code: {billing_postcode}
-Notes: {order_notes}
-Shipping Method: {shipping_method_title}
+Recipient: {billing.first_name} {billing.last_name}
+Address: {billing.state} - {billing.city} - {billing.address_1} - {billing.address_2}
+Phone: {billing.phone}
+Zip/Postal Code: {billing.postcode}
+Notes: {order.notes}
+Shipping Method: {shipping.method_title}
+Payment Method: {payment.method_title}
