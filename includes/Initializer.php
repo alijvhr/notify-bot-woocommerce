@@ -283,7 +283,9 @@ class Initializer extends Singleton {
 					'cancelled'       => self::STATUS_PROCESS | self::STATUS_REFUND,
 					'refunded'        => self::STATUS_PROCESS,
 					'completed'       => self::STATUS_PROCESS,
-					'pending payment' => self::STATUS_PROCESS
+					'pending payment' => self::STATUS_PROCESS,
+					'pending' => self::STATUS_PROCESS | self::STATUS_CANCEL,
+					'on hold' => self::STATUS_PROCESS | self::STATUS_CANCEL,
 				];
 				if ( $status != 'completed' || ! $remove_buttons ) {
 					if ( $status != 'processing' ) {
