@@ -2,6 +2,7 @@
 
 namespace WOOTB\includes;
 
+use Automattic\WooCommerce\Utilities\FeaturesUtil;
 use Exception;
 
 class Initializer extends Singleton {
@@ -14,7 +15,7 @@ class Initializer extends Singleton {
 
 	protected $queue = [];
 
-	function init() {
+	public function init() {
 		$path = dirname( plugin_basename( __FILE__ ), 2 );
 		load_plugin_textdomain( 'notify-bot-woocommerce', false, "$path/languages/" );
 		$active_plugins = apply_filters( 'active_plugins', get_option( 'active_plugins' ) );
@@ -34,6 +35,7 @@ class Initializer extends Singleton {
 		] );
 		add_filter( 'woocommerce_product_variation_title_include_attributes', '__return_true' );
 		add_filter( 'woocommerce_is_attribute_in_product_name', '__return_false' );
+		add_action( 'before_woocommerce_init', [ $this, 'HPOS_compatible' ] );
 	}
 
 	function woocommerceNotice() {
@@ -41,7 +43,7 @@ class Initializer extends Singleton {
 		echo '<div class="notice notice-error"><p>' . esc_html( $message ) . '</p></div>';
 	}
 
-	function add_action_links( $actions ) {
+	public function add_action_links( $actions ) {
 		$configure = __( 'Configure', 'notify-bot-woocommerce' );
 		$url       = admin_url( 'admin.php?page=wc-settings&tab=wootb' );
 		$actions[] = "<a href=\"$url\">$configure</a>";
@@ -49,7 +51,7 @@ class Initializer extends Singleton {
 		return $actions;
 	}
 
-	function loadHooks() {
+	public function loadHooks() {
 		$this->initTelegramBot();
 		if ( version_compare( get_option( 'wootb_version', '0.0.0' ), WOOTB_PLUGIN_VERSION, '<' ) ) {
 			$this->update();
@@ -68,6 +70,12 @@ class Initializer extends Singleton {
 		add_action( 'shutdown', [ $this, 'sendUpdatesToBot' ] );
 	}
 
+	public function HPOS_compatible() {
+		if ( class_exists( FeaturesUtil::class ) ) {
+			FeaturesUtil::declare_compatibility( 'custom_order_tables', __FILE__ );
+		}
+	}
+
 	private function initTelegramBot() {
 		$this->telegram = new TelegramAdaptor( get_option( 'wootb_setting_token' ) );
 		$use_proxy      = get_option( 'wootb_use_proxy', false );
@@ -77,8 +85,10 @@ class Initializer extends Singleton {
 
 	public function update() {
 		$old_version = get_option( 'wootb_version', '0.0.0' );
-		update_option( 'wootb_version', WOOTB_PLUGIN_VERSION );
-		update_option( 'wootb_setting_otp', md5( time() ) );
+		if ( $old_version != WOOTB_PLUGIN_VERSION ) {
+			update_option( 'wootb_version', WOOTB_PLUGIN_VERSION );
+			update_option( 'wootb_setting_otp', md5( time() ) );
+		}
 	}
 
 	public function registerUser( $chat ) {
@@ -123,13 +133,13 @@ class Initializer extends Singleton {
 		return $schedules;
 	}
 
-	function admin_enqueue_script() {
+	public function admin_enqueue_script() {
 		wp_enqueue_script( 'wootb_admin_script', plugin_dir_url( __FILE__ ) . '../assets/js/admin.js', array( 'jquery' ), '1.5', true );
 		wp_register_style( 'wootb_css_script', plugin_dir_url( __FILE__ ) . '../assets/css/admin.css', false, '1.5' );
 		wp_enqueue_style( 'wootb_css_script' );
 	}
 
-	function sendTestMessage() {
+	public function sendTestMessage() {
 		try {
 			$this->sendToAll( [], __( 'This is a test message from Notify Bot for WooCommerce Plugin!', 'notify-bot-woocommerce' ) );
 			echo wp_json_encode( [
@@ -167,7 +177,7 @@ class Initializer extends Singleton {
 					}
 					$message = $this->telegram->sendMessage( $id, $text, $keyboard );
 				} catch ( Exception $exception ) {
-					trigger_error($exception->getMessage(), 512);
+					trigger_error( $exception->getMessage(), 512 );
 				}
 			} while ( ! isset( $message->ok ) && $tries ++ < 3 );
 			if ( isset( $message->result->message_id ) ) {
@@ -243,9 +253,10 @@ class Initializer extends Singleton {
 	}
 
 	public function sendUpdateToBot( $order_id ) {
-		$wc         = new WooCommerceAdaptor( $order_id );
-		$text       = $wc->interpolate( self::getTemplate() );
-		$messageIds = json_decode( get_post_meta( $order_id, 'WooTelegramMessageIds', true ) ?: "[]", true );
+		$wc   = new WooCommerceAdaptor( $order_id );
+		$text = $wc->interpolate( self::getTemplate() );
+
+		$messageIds = json_decode( $wc->order->get_meta( 'WooTelegramMessageIds' ) ?: "[]", true );
 		$status     = $wc->get_status();
 		if ( isset( $text ) ) {
 			$remove_buttons  = get_option( 'wootb_remove_btn_statuses', false );
@@ -259,8 +270,8 @@ class Initializer extends Singleton {
 					'refunded'        => self::STATUS_PROCESS,
 					'completed'       => self::STATUS_PROCESS,
 					'pending payment' => self::STATUS_PROCESS,
-					'pending' => self::STATUS_PROCESS | self::STATUS_CANCEL,
-					'on hold' => self::STATUS_PROCESS | self::STATUS_CANCEL,
+					'pending'         => self::STATUS_PROCESS | self::STATUS_CANCEL,
+					'on hold'         => self::STATUS_PROCESS | self::STATUS_CANCEL,
 				];
 				if ( $status != 'completed' || ! $remove_buttons ) {
 					if ( $status != 'processing' ) {
@@ -295,7 +306,7 @@ class Initializer extends Singleton {
 					}
 				}
 				$messageIds = $this->sendToAll( $messageIds, $text, $keyboard );
-				update_post_meta( $order_id, 'WooTelegramMessageIds', wp_json_encode( $messageIds ) );
+				$wc->order->update_meta_data( 'WooTelegramMessageIds', wp_json_encode( $messageIds ) );
 			}
 		}
 

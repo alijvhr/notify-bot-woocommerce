@@ -37,7 +37,7 @@ class TelegramAPI extends Singleton {
 
 
 	public function sendmsgs() {
-		trigger_error('doinnnss', E_USER_WARNING);
+		trigger_error( 'doinnnss', E_USER_WARNING );
 	}
 
 
@@ -75,16 +75,15 @@ class TelegramAPI extends Singleton {
 	}
 
 	public function command( $object ) {
-		preg_match( '/^\/(\w++)\S++\s++(.++)$/ism', $object->message->text, $matches );
+		preg_match( '/^\/(\w++)(\S++)?\s++(.++)$/ism', $object->message->text, $matches );
 		$cmd = $matches[1];
 		$arg = $matches[2];
-
 		switch ( $cmd ) {
 			case 'start':
-				$otp   = get_option( 'wootb_setting_otp' );
+				$otp = get_option( 'wootb_setting_otp' );
 				if ( $arg == $otp ) {
-					$chat    = $object->message->chat;
-					Initializer::getInstance()->registerUser($chat);
+					$chat = $object->message->chat;
+					Initializer::getInstance()->registerUser( $chat );
 				}
 				break;
 		}
