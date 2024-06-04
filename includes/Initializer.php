@@ -59,7 +59,8 @@ class Initializer extends Singleton {
 		add_action( 'wp_ajax_wootb_send_test_message', [ $this, 'sendTestMessage' ] );
 		add_filter( 'woocommerce_get_settings_pages', [ $this, 'addWooSettingSection' ] );
 		add_action( 'admin_enqueue_scripts', [ $this, 'admin_enqueue_script' ] );
-		add_action( 'save_post_shop_order', [ $this, 'woocommerce_new_order' ] );
+		add_action( 'woocommerce_update_order', [ $this, 'woocommerce_new_order' ] );
+		add_action( 'woocommerce_new_order', [ $this, 'woocommerce_new_order' ] );
 //		add_action( 'save_post_shop_order', [ $this, 'sendUpdatesToBot' ] );
 		add_action( 'woocommerce_checkout_order_processed', [ $this, 'woocommerce_new_order' ] );
 //		add_action( 'woocommerce_checkout_order_processed', [ $this, 'sendUpdatesToBot' ] );
