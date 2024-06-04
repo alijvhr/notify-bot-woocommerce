@@ -21,7 +21,7 @@ class OptionPanel extends \WC_Settings_Page {
 	}
 
 	function get_own_sections() {
-		$tabs = get_option( 'wootb_bot_username' ) ? [
+		$tabs = get_option( 'wootb_bot_username', false ) ? [
 			'register' => __( 'register', 'notify-bot-woocommerce' ),
 			'users'    => __( 'users', 'notify-bot-woocommerce' ),
 			'template' => __( 'message', 'notify-bot-woocommerce' )
@@ -125,7 +125,7 @@ class OptionPanel extends \WC_Settings_Page {
 	}
 
 	public function render_users_table() {
-		$users   = json_decode( get_option( 'wootb_setting_users' ), true );
+		$users   = json_decode( get_option( 'wootb_setting_users', '[]' ), true );
 		$headers = [
 			__( 'ID', 'notify-bot-woocommerce' ),
 			__( 'username', 'notify-bot-woocommerce' ),
@@ -195,14 +195,27 @@ class OptionPanel extends \WC_Settings_Page {
 	}
 
 	public function save() {
+		$old_token = get_option( 'wootb_setting_token', 0 );
 		parent::save();
-		if ( in_array( $this->current_section, [ '', 'register' ] ) ) {
-			$response = $this->telegram->setWebhook( site_url( "/wp-json/wootb/telegram/hook" ) );
+		$new_token = get_option( 'wootb_setting_token', 0 );
+		$time      = get_option( 'wootb_bot_update_time', 0 );
+		if ( $time < time() - 3600 || $old_token != $new_token ) {
+			$this->telegram = new TelegramAdaptor( $new_token );
+			$response       = $this->telegram->setWebhook( site_url( "/wp-json/wootb/telegram/hook" ) );
+			$uname          = '';
 			if ( $response->ok ) {
-				$info = $this->telegram->getInfo();
-				update_option( 'wootb_bot_username', $info->result->username );
-				update_option( 'wootb_setting_otp', md5( time() ) );
+				$info  = $this->telegram->getInfo();
+				$uname = $info->result->username;
+				update_option( 'wootb_bot_update_time', time() );
+			} else {
+				$desc = $response->description ?? '';
+				add_settings_error( 'wootb', 'wootb_bot_error', __( 'Error on validating bot api_key. ' ).$desc, 'success' );
 			}
+			update_option( 'wootb_bot_username', $uname );
+			update_option( 'wootb_setting_otp', md5( time() ) );
+		} else {
+			$desc = $response->description ?? '';
+			add_settings_error( 'wootb', 'wootb_bot_error', __( 'Error on validating bot api_key. ' ).$desc, 'success' );
 		}
 	}
 }
