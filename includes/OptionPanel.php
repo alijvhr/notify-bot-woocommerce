@@ -21,12 +21,15 @@ class OptionPanel extends \WC_Settings_Page {
 	}
 
 	function get_own_sections() {
-		return [
-			''         => __( 'telegram', 'notify-bot-woocommerce' ),
+		$tabs = get_option( 'wootb_bot_username' ) ? [
 			'register' => __( 'register', 'notify-bot-woocommerce' ),
 			'users'    => __( 'users', 'notify-bot-woocommerce' ),
 			'template' => __( 'message', 'notify-bot-woocommerce' )
-		];
+		] : [];
+
+		return [
+			       '' => __( 'telegram', 'notify-bot-woocommerce' ),
+		       ] + $tabs;
 
 
 	}
