@@ -36,11 +36,6 @@ class TelegramAPI extends Singleton {
 	}
 
 
-	public function sendmsgs() {
-		trigger_error( 'doinnnss', E_USER_WARNING );
-	}
-
-
 	public function update(): \WP_REST_Response {
 		$object = json_decode( \WP_REST_Server::get_raw_data() );
 		if ( isset( $object->callback_query ) ) {
