@@ -72,7 +72,7 @@ class Initializer extends Singleton {
 
 	public function HPOS_compatible() {
 		if ( class_exists( FeaturesUtil::class ) ) {
-			FeaturesUtil::declare_compatibility( 'custom_order_tables', __FILE__ );
+			FeaturesUtil::declare_compatibility( 'custom_order_tables', WOOTB_PLUGIN_FILE );
 		}
 	}
 
