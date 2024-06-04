@@ -43,6 +43,7 @@ function wootb_auto_loader( $class ) {
 
 spl_autoload_register( 'WOOTB\\wootb_auto_loader', true, true );
 
+define( 'WOOTB_PLUGIN_FILE', __FILE__ );
 define( 'WOOTB_PLUGIN_PATH', plugin_dir_path( __FILE__ ) );
 define( 'WOOTB_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'WOOTB_PLUGIN_DIR', __DIR__ );
