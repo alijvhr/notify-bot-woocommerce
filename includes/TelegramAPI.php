@@ -75,9 +75,9 @@ class TelegramAPI extends Singleton {
 	}
 
 	public function command( $object ) {
-		preg_match( '/^\/(\w++)(\S++)?\s++(.++)$/ism', $object->message->text, $matches );
+		preg_match( '/^\/(\w++)((?:\S++)?)\s++(.++)$/ism', $object->message->text, $matches );
 		$cmd = $matches[1];
-		$arg = $matches[2];
+		$arg = $matches[3];
 		switch ( $cmd ) {
 			case 'start':
 				$otp = get_option( 'wootb_setting_otp' );
