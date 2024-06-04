@@ -162,7 +162,6 @@ class Initializer extends Singleton {
 			$tries   = 0;
 			do {
 				try {
-
 					if ( isset( $messageIds[ $id ] ) ) {
 						$msg = explode( ',', $messageIds[ $id ] );
 						if ( isset( $msg[1] ) && $msg[1] == $md5 ) {
@@ -308,6 +307,7 @@ class Initializer extends Singleton {
 				}
 				$messageIds = $this->sendToAll( $messageIds, $text, $keyboard );
 				$wc->order->update_meta_data( 'WooTelegramMessageIds', wp_json_encode( $messageIds ) );
+				$wc->order->save();
 			}
 		}
 
