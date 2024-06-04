@@ -67,6 +67,7 @@ class WooCommerceAdaptor {
 		$date = isset( $date ) ? $date->date( get_option( 'links_updated_date_format' ) ) : '-';
 
 		$replace['order.id']               = $this->order_id;
+		$replace['order.edit_url']         = $this->order->get_edit_order_url();
 		$replace['customer.id']            = $this->order->get_user_id();
 		$replace['customer.order_count']   = $this->wcGetCustomerOrderCount();
 		$replace['order.status']           = wc_get_order_status_name( $this->order->get_status() );
