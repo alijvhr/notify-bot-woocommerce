@@ -107,6 +107,9 @@ msgstr "نمایش"
 msgid "Error on validating bot api_key. "
 msgstr "خطا در هنگام اتصال به بات تلگرام. "
 
+msgid "Api key not changed. Everything is updated. "
+msgstr "کلید اتصال تغییری نکرده. بروزرسانی لازم نیست. "
+
 msgid "Process"
 msgstr "اجرا"
 

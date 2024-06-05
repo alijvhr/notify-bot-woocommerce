@@ -212,14 +212,14 @@ class OptionPanel extends WC_Settings_Page {
 				update_option( 'wootb_bot_update_time', time() );
 			} else {
 				$desc = $response->description ?? '';
-				WC_Admin_Settings::add_error( __( 'Error on validating bot api_key. ', 'notify-bot-woocommerce' ) . $desc );
+				WC_Admin_Settings::add_error( __( 'Error on validating bot api_key.', 'notify-bot-woocommerce' ) . $desc );
 			}
 			update_option( 'wootb_bot_username', $uname );
 			if(!$uname) update_option( 'wootb_setting_users', '[]' );
 			update_option( 'wootb_setting_otp', md5( time() ) );
 		} else {
 			$desc = $response->description ?? '';
-			WC_Admin_Settings::add_error( __( 'Error on validating bot api_key. ', 'notify-bot-woocommerce' ) . $desc );
+			WC_Admin_Settings::add_error( __( 'Api key not changed. Everything is updated.', 'notify-bot-woocommerce' ) );
 		}
 	}
 }
