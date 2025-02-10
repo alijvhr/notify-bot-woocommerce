@@ -18,8 +18,8 @@ class WooCommerceAdaptor {
 	}
 
 	public function interpolate( $message ) {
-		$detail = $this->order_detail( $message );
-		$detail = $this->extra_detail( $detail );
+		$detail = $this->order_extra_detail( $message );
+		$detail = $this->order_detail( $detail );
 		$detail = $this->product_detail( $detail );
 		if ( ! trim( $detail['products'] ) ) {
 			return null;
@@ -33,30 +33,33 @@ class WooCommerceAdaptor {
 		return $message;
 	}
 
-	private function order_detail( $message ) {
+	private function order_extra_detail( $message ) {
 		preg_match_all( $this->pattern, $message, $matches, PREG_PATTERN_ORDER );
-		$matches  = array_unique( $matches[1] );
-		$data     = $this->order->get_data();
-		$metadata = $this->order->get_meta_data();
-		$detail   = [];
+		$matches = array_unique( $matches[1] );
+		$data    = $this->order->get_data();
+		$detail  = [];
 		foreach ( $matches as $match ) {
 			if ( isset( $detail[ $match ] ) ) {
 				continue;
 			}
-			$path  = preg_replace( '/^order\./', '', $match );
-			$path  = explode( '.', $path );
-			$value = isset( $data[ $path[0] ] ) ? $data : $metadata;
-			foreach ( $path as $key ) {
-				if ( ! isset( $value[ $key ] ) ) {
-					$value = '';
-					break;
+			$path = preg_replace( '/^order\./', '', $match );
+			$path = explode( '.', $path );
+			if ( isset( $data[ $path[0] ] ) ) {
+				$value = $data;
+				foreach ( $path as $key ) {
+					if ( ! isset( $value[ $key ] ) ) {
+						$value = '';
+						break;
+					}
+					$value = $value[ $key ];
 				}
-				$value = $value[ $key ];
+				if ( is_array( $value ) || is_object( $value ) ) {
+					$value = wp_json_encode( $value, JSON_UNESCAPED_UNICODE );
+				} else {
+					$value = __( $value );
+				}
 			}
-			if ( is_array( $value ) || is_object( $value ) ) {
-				$value = wp_json_encode( $value, JSON_UNESCAPED_UNICODE );
-			}
-			$detail[ $match ] = $value;
+			$detail[ $match ] = $value ?? '';
 		}
 
 		return $detail;
@@ -79,7 +82,9 @@ class WooCommerceAdaptor {
 			                                     'processing' => '🕙',
 			                                     'completed'  => '✅',
 			                                     'cancelled'  => '❌',
-			                                     'refunded'   => '💸'
+			                                     'refunded'   => '💸',
+			                                     'pending'    => '💳',
+			                                     'on-hold'    => '📥'
 		                                     ][ $this->order->get_status() ] ?? '🛒';
 		$replace['total']                  = $this->format_price( $this->order->get_total() );
 		$replace['order.date_created']     = $date;
