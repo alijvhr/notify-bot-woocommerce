@@ -84,18 +84,13 @@ class WooCommerceAdaptor {
 		$replace['total']                  = $this->format_price( $this->order->get_total() );
 		$replace['order.date_created']     = $date;
 		$replace['order.date_created_per'] = PersianDate::jdate( 'd F Y, g:i a', strtotime( $date ) );
-		$shipping_title                    = $this->order->get_shipping_method();
-		$payment_method                    = $this->order->get_payment_method();
-		if ( $shipping_title ) {
-			$replace['shipping.method_title'] = $shipping_title;
-			$replace['shipping.total']        = $this->format_price( $this->order->get_shipping_total() );
+		$replace['shipping.method_title']  = $replace['shipping.method'] = $this->order->get_shipping_method();
+		$replace['shipping.total']         = $this->format_price( $this->order->get_shipping_total() );
+		$replace['payment.method_title']   = $replace['payment.method'] = $this->order->get_payment_method();
 		$order_meta                        = '';
 		foreach ( $meta_data as $object ) {
 			$order_meta                         .= $object->key . " : " . $object->value . "\n";
 			$replace["order.meta.$object->key"] = $object->value;
-		}
-		if ( $payment_method ) {
-			$replace['payment.method_title'] = $payment_method;
 		}
 		$replace['order.meta']      = $order_meta;
 		$replace['order.source']    = __( $replace['order.meta._wc_order_attribution_source_type'], 'notify-bot-woocommerce' ) . ' : ' . __( $replace['order.meta._wc_order_attribution_utm_source'], 'notify-bot-woocommerce' );
