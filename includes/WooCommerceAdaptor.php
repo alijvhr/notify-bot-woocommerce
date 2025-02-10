@@ -62,14 +62,17 @@ class WooCommerceAdaptor {
 		return $detail;
 	}
 
-	function extra_detail( $replace ) {
-		$date = $this->order->get_date_created() ?? $this->order->get_date_modified();
-		$date = isset( $date ) ? $date->date( get_option( 'links_updated_date_format' ) ) : '-';
-
-		$replace['order.id']               = $this->order_id;
-		$replace['order.edit_url']         = $this->order->get_edit_order_url();
+	function order_detail( $replace ) {
+		$date                              = $this->order->get_date_created() ?? $this->order->get_date_modified();
+		$date                              = isset( $date ) ? $date->date( get_option( 'links_updated_date_format' ) ) : '-';
+		$meta_data                         = $this->order->get_meta_data();
+		$replace['shop.url']               = get_option( 'siteurl', sanitize_text_field( $_SERVER['HTTP_HOST'] ) );
+		$replace['shop.name']              = get_option( 'blogname', "blog" );
+		$replace['shop.tag']               = preg_replace( '/\W/', '', get_option( 'blogname', "blog" ) );
 		$replace['customer.id']            = $this->order->get_user_id();
 		$replace['customer.order_count']   = $this->wcGetCustomerOrderCount();
+		$replace['order.id']               = $this->order_id;
+		$replace['order.edit_url']         = $this->order->get_edit_order_url();
 		$replace['order.status']           = wc_get_order_status_name( $this->order->get_status() );
 		$replace['order.notes']            = $this->order->get_customer_note();
 		$replace['order.icon']             = [
@@ -81,18 +84,22 @@ class WooCommerceAdaptor {
 		$replace['total']                  = $this->format_price( $this->order->get_total() );
 		$replace['order.date_created']     = $date;
 		$replace['order.date_created_per'] = PersianDate::jdate( 'd F Y, g:i a', strtotime( $date ) );
-		$replace['shop.url']               = get_option( 'siteurl', sanitize_text_field( $_SERVER['HTTP_HOST'] ) );
-		$replace['shop.name']              = get_option( 'blogname', "blog" );
-		$replace['shop.tag']               = preg_replace( '/\W/', '', get_option( 'blogname', "blog" ) );
 		$shipping_title                    = $this->order->get_shipping_method();
 		$payment_method                    = $this->order->get_payment_method();
 		if ( $shipping_title ) {
 			$replace['shipping.method_title'] = $shipping_title;
 			$replace['shipping.total']        = $this->format_price( $this->order->get_shipping_total() );
+		$order_meta                        = '';
+		foreach ( $meta_data as $object ) {
+			$order_meta                         .= $object->key . " : " . $object->value . "\n";
+			$replace["order.meta.$object->key"] = $object->value;
 		}
 		if ( $payment_method ) {
 			$replace['payment.method_title'] = $payment_method;
 		}
+		$replace['order.meta']      = $order_meta;
+		$replace['order.source']    = __( $replace['order.meta._wc_order_attribution_source_type'], 'notify-bot-woocommerce' ) . ' : ' . __( $replace['order.meta._wc_order_attribution_utm_source'], 'notify-bot-woocommerce' );
+		$replace['customer.is_old'] = sprintf( __( $replace['customer.order_count'] ? 'Old (%1$s)' : 'New', 'notify-bot-woocommerce' ), $replace['customer.order_count'] );
 
 		return $replace;
 	}
