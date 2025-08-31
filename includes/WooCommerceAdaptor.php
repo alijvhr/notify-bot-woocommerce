@@ -77,6 +77,7 @@ class WooCommerceAdaptor {
 		$replace['order.id']               = $this->order_id;
 		$replace['order.edit_url']         = $this->order->get_edit_order_url();
 		$replace['order.status']           = wc_get_order_status_name( $this->order->get_status() );
+		$replace['order.status_tag']       = str_replace( ' ', '_', $replace['order.status'] );
 		$replace['order.notes']            = $this->order->get_customer_note();
 		$replace['order.icon']             = [
 			                                     'processing' => '🕙',
