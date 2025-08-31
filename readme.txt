@@ -3,7 +3,7 @@ Contributors: alijvhr
 Tags: telegram, notification, woocommerce notifier, woocommerce, تلگرام, نوتیفیکیشن, تلگرام, ووکامرس تلگرام
 Requires at least: 6.7
 Tested up to: 6.8.2
-Stable tag: 2.4.1
+Stable tag: 2.4.2
 WC requires at least: 7.5.1
 WC tested up to: 10.1.2
 License: MIT
@@ -68,7 +68,7 @@ Domain: https://tl.alijvhr.com/
 
 == Changelog ==
 
-[2.4.1] - 2025-08-31
+[2.4.2] - 2025-08-31
 Fixed:
 - Fixed API_KEY verification issues in proxy mode
 - Fixed Error logging issues for telegram requests
