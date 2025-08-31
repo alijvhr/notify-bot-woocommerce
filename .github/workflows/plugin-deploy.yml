@@ -5,6 +5,7 @@ on:
       - "v*"
 jobs:
   tag:
+    permissions: write-all
     name: New tag
     runs-on: ubuntu-latest
     steps:
