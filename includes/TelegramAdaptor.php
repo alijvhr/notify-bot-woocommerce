@@ -48,9 +48,11 @@ class TelegramAdaptor {
 		$data = http_build_query( $data );
 
 		$response = wp_remote_get( "$this->reqUrl/$method?$data", [ 'timeout', 1 ] );
-//		if ( wp_remote_retrieve_response_code( $response ) != 200 ) {
-//			throw new \Exception( 'Cannot connect to telegram!' );
-//		}
+		$code = wp_remote_retrieve_response_code( $response );
+		if ( $code != 200 || $response instanceof \WP_Error ) {
+			$error = $response instanceof \WP_Error ? $response->get_error_message() : wp_remote_retrieve_body( $response );
+			error_log( "Cannot connect to telegram! $error $code" );
+		}
 
 		return json_decode( wp_remote_retrieve_body( $response ) );
 	}
