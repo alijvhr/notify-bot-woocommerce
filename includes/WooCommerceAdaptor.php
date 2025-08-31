@@ -88,7 +88,10 @@ class WooCommerceAdaptor {
 			                                     'on-hold'    => '📥'
 		                                     ][ $this->order->get_status() ] ?? '🛒';
 		$replace['total']                  = $this->format_price( $this->order->get_total() );
-		$replace['billing.state']          = WC()->countries->get_states( $this->order->get_billing_country() )[ $this->order->get_billing_state() ];
+		$wc_countries                      = new \WC_Countries();
+		$country_states                    = $wc_countries->get_states( $this->order->get_billing_country() );
+		$state                             = $this->order->get_billing_state();
+		$replace['billing.state']          = $country_states[ $state ] ?? $state;
 		$replace['order.date_created']     = $date;
 		$replace['order.date_created_per'] = PersianDate::jdate( 'd F Y, g:i a', strtotime( $date ) );
 		$replace['shipping.method_title']  = $replace['shipping.method'] = $this->order->get_shipping_method();
@@ -99,8 +102,10 @@ class WooCommerceAdaptor {
 			$order_meta                         .= $object->key . " : " . $object->value . "\n";
 			$replace["order.meta.$object->key"] = $object->value;
 		}
-		$replace['order.meta']      = $order_meta;
-		$replace['order.source']    = __( $replace['order.meta._wc_order_attribution_source_type'], 'notify-bot-woocommerce' ) . ' : ' . __( $replace['order.meta._wc_order_attribution_utm_source'], 'notify-bot-woocommerce' );
+		$replace['order.meta'] = $order_meta;
+		if ( isset( $replace['order.meta._wc_order_attribution_source_type'] ) ) {
+			$replace['order.source'] = __( $replace['order.meta._wc_order_attribution_source_type'], 'notify-bot-woocommerce' ) . ' : ' . __( $replace['order.meta._wc_order_attribution_utm_source'], 'notify-bot-woocommerce' );
+		}
 		$replace['customer.is_old'] = sprintf( __( $replace['customer.order_count'] ? 'Old (%1$s)' : 'New', 'notify-bot-woocommerce' ), $replace['customer.order_count'] );
 
 		return $replace;
