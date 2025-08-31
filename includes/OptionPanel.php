@@ -207,20 +207,24 @@ class OptionPanel extends WC_Settings_Page {
 		$new_token = get_option( 'wootb_setting_token', 0 );
 		$time      = get_option( 'wootb_bot_update_time', 0 );
 		if ( $time < time() - 3600 || $old_token != $new_token ) {
-			$this->telegram = new TelegramAdaptor( $new_token );
+			$this->telegram = Initializer::getInstance()->telegram;
 			$response       = $this->telegram->setWebhook( site_url( "/wp-json/wootb/telegram/hook" ) );
 			$uname          = '';
-			if ( $response->ok ) {
-				$info  = $this->telegram->getInfo();
-				$uname = $info->result->username;
-				update_option( 'wootb_bot_update_time', time() );
-			} else {
-				$desc = $response->description ?? '';
-				WC_Admin_Settings::add_error( __( 'Error on validating bot api_key.', 'notify-bot-woocommerce' ) . $desc );
+			if ( $response && property_exists( $response, 'ok' ) ) {
+				if ( $response->ok ) {
+					$info  = $this->telegram->getInfo();
+					$uname = $info->result->username;
+					update_option( 'wootb_bot_update_time', time() );
+				} else {
+					$desc = $response->description ?? '';
+					WC_Admin_Settings::add_error( __( 'Error on validating bot api_key.', 'notify-bot-woocommerce' ) . $desc );
+				}
+				update_option( 'wootb_bot_username', $uname );
+				if ( ! $uname ) {
+					update_option( 'wootb_setting_users', '[]' );
+				}
+				update_option( 'wootb_setting_otp', md5( time() ) );
 			}
-			update_option( 'wootb_bot_username', $uname );
-			if(!$uname) update_option( 'wootb_setting_users', '[]' );
-			update_option( 'wootb_setting_otp', md5( time() ) );
 		} else {
 			$desc = $response->description ?? '';
 			WC_Admin_Settings::add_error( __( 'Api key not changed. Everything is updated.', 'notify-bot-woocommerce' ) );
