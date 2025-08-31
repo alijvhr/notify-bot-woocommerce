@@ -10,10 +10,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@master
-      - name: Build
-        run: |
-          npm install
-          npm run build
       - name: Create Release
         id: create_release
         uses: actions/create-release@latest
