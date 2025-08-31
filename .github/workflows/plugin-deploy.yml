@@ -4,9 +4,9 @@ on:
     tags:
       - "v*"
 jobs:
-  tag:
+  release:
     permissions: write-all
-    name: New tag
+    name: New Release
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -19,10 +19,16 @@ jobs:
         with:
           tag_name: ${{ github.ref }}
           release_name: Release ${{ github.ref }}
-          body: |
-            Changes in this Release
+          generateReleaseNotes: true
           draft: false
           prerelease: false
+          makeLatest: true
+  deploy:
+    name: Deploy Version to WordPress.org
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@master
       - name: WordPress Plugin Deploy
         id: deploy
         uses: 10up/action-wordpress-plugin-deploy@stable
