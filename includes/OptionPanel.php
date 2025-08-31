@@ -71,11 +71,15 @@ class OptionPanel extends WC_Settings_Page {
 		$link       = "https://t.me/$bot_uname?start=$otp";
 		$link_group = "https://t.me/$bot_uname?startgroup=$otp";
 		if ( extension_loaded( 'gd' ) && function_exists( 'gd_info' ) ) {
-			$file_link  = wp_upload_dir() . '/../wootb_link.png';
-			$file_group = wp_upload_dir() . '/../wootb_group.png';
-			QRcode::png( $link, $file_link, QR_ECLEVEL_H, 7 );
-			$qr = base64_encode( file_get_contents( $file_link ) );
-			QRcode::png( $link_group, $file_group, QR_ECLEVEL_H, 7 );
+			$dir        = wp_upload_dir()['basedir'];
+			$file_link  = $dir . '/wootb_link.png';
+			$file_group = $dir . '/wootb_group.png';
+			if ( ! file_exists( $file_link ) || filemtime( $file_link ) < time() - 86400 ) {
+				@unlink( $file_link );
+				QRcode::png( $link, $file_link, QR_ECLEVEL_H, 7 );
+				QRcode::png( $link_group, $file_group, QR_ECLEVEL_H, 7 );
+			}
+			$qr       = base64_encode( file_get_contents( $file_link ) );
 			$group_qr = base64_encode( file_get_contents( $file_group ) );
 		} else {
 			$qr = $group_qr = '';
