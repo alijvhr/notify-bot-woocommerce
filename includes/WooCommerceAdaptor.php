@@ -66,8 +66,9 @@ class WooCommerceAdaptor {
 	}
 
 	function order_detail( $replace ) {
-		$date                              = $this->order->get_date_created() ?? $this->order->get_date_modified();
-		$date                              = isset( $date ) ? $date->date( get_option( 'links_updated_date_format' ) ) : '-';
+		$date_format                       = get_option( 'links_updated_date_format' );
+		$create_date                       = $this->order->get_date_created();
+		$date                              = $create_date ?? $this->order->get_date_modified();
 		$meta_data                         = $this->order->get_meta_data();
 		$replace['shop.url']               = get_option( 'siteurl', sanitize_text_field( $_SERVER['HTTP_HOST'] ) );
 		$replace['shop.name']              = get_option( 'blogname', "blog" );
@@ -92,8 +93,9 @@ class WooCommerceAdaptor {
 		$country_states                    = $wc_countries->get_states( $this->order->get_billing_country() );
 		$state                             = $this->order->get_billing_state();
 		$replace['billing.state']          = $country_states[ $state ] ?? $state;
-		$replace['order.date_created']     = $date;
-		$replace['order.date_created_per'] = PersianDate::jdate( 'd F Y, g:i a', strtotime( $date ) );
+		$replace['order.date_created']     = isset( $create_date ) ? $create_date->date_i18n( $date_format ) : '-';
+		$replace['order.date']             = isset( $date ) ? $date->date_i18n( $date_format ) : '-';
+		$replace['order.date_created_per'] = PersianDate::jdate( 'd F Y, g:i a', strtotime( $create_date ) );
 		$replace['shipping.method_title']  = $replace['shipping.method'] = $this->order->get_shipping_method();
 		$replace['shipping.total']         = $this->format_price( $this->order->get_shipping_total() );
 		$replace['payment.method_title']   = $replace['payment.method'] = $this->order->get_payment_method();
