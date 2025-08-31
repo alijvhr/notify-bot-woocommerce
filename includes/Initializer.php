@@ -66,15 +66,26 @@ class Initializer extends Singleton {
 //		add_action( 'woocommerce_checkout_order_processed', [ $this, 'sendUpdatesToBot' ] );
 		add_action( 'woocommerce_order_status_changed', [ $this, 'woocommerce_new_order' ] );
 //		add_action( 'woocommerce_order_status_changed', [ $this, 'sendUpdatesToBot' ] );
-//		add_filter( 'cron_schedules', [ $this, 'add_minute_cron' ] );
 		add_action( 'admin_action_remove_wootb_user', [ $this, 'remove_wootb_user' ] );
-		add_action( 'shutdown', [ $this, 'sendUpdatesToBot' ] );
+//		add_action( 'shutdown', [ $this, 'sendUpdatesToBot' ] );
+		add_filter( 'cron_schedules', [ $this, 'add_wootb_cron_interval' ] );
+		add_action( 'wootb_queue_event', [ $this, 'sendUpdatesToBot' ] );
+		$this->schedule_events();
 	}
 
 	public function HPOS_compatible() {
 		if ( class_exists( FeaturesUtil::class ) ) {
 			FeaturesUtil::declare_compatibility( 'custom_order_tables', WOOTB_PLUGIN_FILE );
 		}
+	}
+
+	public function add_wootb_cron_interval( $schedules ) {
+		$schedules['wootb_queue_interval'] = [
+			'interval' => WOOTB_QUEUE_CRON_INTERVAL * MINUTE_IN_SECONDS,
+			'display'  => __( 'Every ' . WOOTB_QUEUE_CRON_INTERVAL . ' Minutes', 'notify-bot-woocommerce' ),
+		];
+
+		return $schedules;
 	}
 
 	private function initTelegramBot() {
@@ -118,20 +129,10 @@ class Initializer extends Singleton {
 	}
 
 	public function schedule_events() {
-		if ( ! wp_next_scheduled( 'wootb_send_updates' ) ) {
-			wp_schedule_event( time(), 'hourly', 'wootb_send_updates' );
+		if ( ! wp_next_scheduled( 'wootb_queue_event' ) ) {
+			wp_schedule_event( time(), 'wootb_queue_interval', 'wootb_queue_event' );
+			add_option( 'wootb_queue_last_run', 'Never' );
 		}
-	}
-
-	function add_minute_cron( $schedules ) {
-		if ( ! isset( $schedules['every_minute'] ) ) {
-			$schedules['every_minute'] = [
-				'interval' => 60,
-				'display'  => __( 'Every 1 Minute', 'notify-bot-woocommerce' ),
-			];
-		}
-
-		return $schedules;
 	}
 
 	public function admin_enqueue_script() {
@@ -199,32 +200,44 @@ class Initializer extends Singleton {
 
 	public function addToUpdateQueue( $order_id ) {
 		ignore_user_abort( true );
-//		$this->get_queue();
+		$this->get_queue();
 		if ( ! in_array( $order_id, $this->queue ) ) {
 			$this->queue[] = $order_id;
 		}
-//		$this->set_queue();
+		$this->set_queue();
 	}
+
+
+	public function activate() {
+		$this->schedule_events();
+	}
+
 
 	public function deactivate() {
 		$this->unschedule_events();
 	}
 
 	public function unschedule_events() {
-		$timestamp = wp_next_scheduled( 'wootb_send_updates' );
-		wp_unschedule_event( $timestamp, 'wootb_send_updates' );
+		wp_clear_scheduled_hook( 'wootb_queue_event' );
+		delete_option( 'wootb_queue_last_run' );
 	}
 
 	public function sendUpdatesToBot() {
+		if ( $last = get_transient( 'wootb_queue_running' ) ) {
+			if ( time() - $last > WOOTB_QUEUE_CRON_INTERVAL * MINUTE_IN_SECONDS ) {
+				delete_transient( 'wootb_queue_running' );
+			}
+
+			return;
+		}
+		update_option( 'wootb_queue_last_run', time() );
 		if ( ! $this->queue ) {
 			$this->get_queue();
 			if ( ! $this->queue ) {
 				return;
 			}
 			ignore_user_abort( true );
-			$queue       = $this->queue;
-			$this->queue = [];
-			$this->set_queue();
+			$queue = $this->queue;
 		} else {
 			$queue = $this->queue;
 		}
@@ -242,14 +255,14 @@ class Initializer extends Singleton {
 	}
 
 	public function get_queue() {
-		$this->queue = json_decode( get_option( 'wootb_send_queue', "[]" ), true );
+		$this->queue = get_option( 'wootb_send_queue', [] );
 
 		return $this->queue;
 	}
 
 	public function set_queue() {
 		$this->queue = array_values( $this->queue );
-		update_option( 'wootb_send_queue', wp_json_encode( $this->queue ) );
+		update_option( 'wootb_send_queue', $this->queue );
 	}
 
 	public function sendUpdateToBot( $order_id ) {
@@ -262,7 +275,7 @@ class Initializer extends Singleton {
 			$remove_buttons  = get_option( 'wootb_remove_btn_statuses', false );
 			$update_statuses = get_option( 'wootb_update_statuses', false );
 			$update_always   = ! $update_statuses;
-			if ( $update_always || in_array( $status, $update_statuses ) ) {
+			if ( $messageIds || $update_always || in_array( $status, $update_statuses ) || in_array( "wc-$status", $update_statuses ) ) {
 				$keyboard       = new TelegramKeyboard( 2 );
 				$status_buttons = [
 					'processing'      => self::STATUS_CANCEL | self::STATUS_COMPLETE | self::STATUS_REFUND,
@@ -273,8 +286,9 @@ class Initializer extends Singleton {
 					'pending'         => self::STATUS_PROCESS | self::STATUS_CANCEL,
 					'on-hold'         => self::STATUS_PROCESS | self::STATUS_REFUND,
 				];
-				if ( $status != 'completed' || ! $remove_buttons ) {
-					if ( $status != 'processing' ) {
+				$btns_remove    = $remove_buttons && ( in_array( $status, $remove_buttons ) || in_array( "wc-$status", $remove_buttons ) );
+				if ( $status !== 'completed' && ! $btns_remove ) {
+					if ( $status !== 'processing' ) {
 						$keyboard->add_inline_callback_button( '🕙 ' . __( 'Process', 'notify-bot-woocommerce' ), [
 							"cmd" => "status",
 							"oid" => $order_id,
