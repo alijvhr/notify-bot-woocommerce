@@ -70,17 +70,20 @@ class TelegramAPI extends Singleton {
 	}
 
 	public function command( $object ) {
-		preg_match( '/^\/(\w++)((?:\S++)?)\s++(.++)$/ism', $object->message->text, $matches );
-		$cmd = $matches[1];
-		$arg = $matches[3];
-		switch ( $cmd ) {
-			case 'start':
-				$otp = get_option( 'wootb_setting_otp' );
-				if ( $arg == $otp ) {
-					$chat = $object->message->chat;
-					Initializer::getInstance()->registerUser( $chat );
-				}
-				break;
+		if ( preg_match( '/^\/(\w++)((?:\S++)?)\s++(.++)$/ism', $object->message->text, $matches ) ) {
+			$cmd = $matches[1];
+			$arg = $matches[3];
+			switch ( $cmd ) {
+				case 'start':
+					$otp = get_option( 'wootb_setting_otp' );
+					if ( $arg == $otp ) {
+						$chat = $object->message->chat;
+						Initializer::getInstance()->registerUser( $chat );
+					}
+					break;
+			}
+		} else {
+			error_log( "Telegram command not matched: " . $object->message->text );
 		}
 	}
 

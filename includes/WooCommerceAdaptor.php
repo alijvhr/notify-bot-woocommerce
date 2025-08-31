@@ -87,6 +87,7 @@ class WooCommerceAdaptor {
 			                                     'on-hold'    => '📥'
 		                                     ][ $this->order->get_status() ] ?? '🛒';
 		$replace['total']                  = $this->format_price( $this->order->get_total() );
+		$replace['billing.state']          = WC()->countries->get_states( $this->order->get_billing_country() )[ $this->order->get_billing_state() ];
 		$replace['order.date_created']     = $date;
 		$replace['order.date_created_per'] = PersianDate::jdate( 'd F Y, g:i a', strtotime( $date ) );
 		$replace['shipping.method_title']  = $replace['shipping.method'] = $this->order->get_shipping_method();
