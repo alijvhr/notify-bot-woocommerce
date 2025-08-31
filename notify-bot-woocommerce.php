@@ -5,7 +5,7 @@
  * Notify Bot for WooCommerce
  *
  * @package WOOTB
- * @version 2.4.0
+ * @version 2.4.1
  * @license GPL-2.0-or-later
  * @author  Ali Javaheri
  *
@@ -13,12 +13,13 @@
  * Plugin Name: Notify Bot for WooCommerce
  * Description: Receive order details and manage them using your telegram
  * Author: Ali Javaheri
- * Version: 2.4.0
+ * Version: 2.4.1
  * Author URI: https://alijvhr.com
- * Requires at least: 5.2
+ * Requires at least: 6.7
+ * Tested up to: 6.8.2
  * Requires PHP: 7.4
- * WC requires at least: 3.2
- * WC tested up to: 9.8.2
+ * WC requires at least: 7.5.1
+ * WC tested up to: 10.1.2
  * Text Domain: notify-bot-woocommerce
  * Domain Path: /languages
  * License: GPL v2 or later
@@ -33,7 +34,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'WOOTB_PLUGIN_VERSION', '2.4.0' );
+define( 'WOOTB_PLUGIN_VERSION', '2.4.1' );
 
 function wootb_auto_loader( $class ) {
 	if ( preg_match( "/^WOOTB(.*)$/", $class, $matches ) ) {
