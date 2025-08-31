@@ -192,14 +192,13 @@ class Initializer extends Singleton {
 
 	public function woocommerce_new_order( $order_id ) {
 		$this->addToUpdateQueue( $order_id );
-		ob_flush();
-		flush();
+//		ob_flush();
+//		flush();
 //		$this->sendUpdatesToBot();
 //		get_headers( site_url( "/wp-json/wootb/telegram/sendmsgs" ) );
 	}
 
 	public function addToUpdateQueue( $order_id ) {
-		ignore_user_abort( true );
 		$this->get_queue();
 		if ( ! in_array( $order_id, $this->queue ) ) {
 			$this->queue[] = $order_id;
@@ -226,9 +225,9 @@ class Initializer extends Singleton {
 		if ( $last = get_transient( 'wootb_queue_running' ) ) {
 			if ( time() - $last > WOOTB_QUEUE_CRON_INTERVAL * MINUTE_IN_SECONDS ) {
 				delete_transient( 'wootb_queue_running' );
+			} else {
+				return;
 			}
-
-			return;
 		}
 		update_option( 'wootb_queue_last_run', time() );
 		if ( ! $this->queue ) {
@@ -237,18 +236,18 @@ class Initializer extends Singleton {
 				return;
 			}
 			ignore_user_abort( true );
-			$queue = $this->queue;
-		} else {
-			$queue = $this->queue;
 		}
+		$queue     = $this->queue;
 		$chatIds   = json_decode( get_option( 'wootb_setting_users' ), true );
 		$chatCount = count( $chatIds );
+		set_transient( 'wootb_queue_running', time(), WOOTB_QUEUE_CRON_INTERVAL * MINUTE_IN_SECONDS - 30 );
 		foreach ( $queue as $key => $order_id ) {
 			$sentCount = count( $this->sendUpdateToBot( $order_id ) );
 			if ( $chatCount <= $sentCount ) {
 				unset( $queue[ $key ] );
 			}
 		}
+		delete_transient( 'wootb_queue_running' );
 		$this->queue = $queue;
 		$this->set_queue();
 
@@ -261,7 +260,7 @@ class Initializer extends Singleton {
 	}
 
 	public function set_queue() {
-		$this->queue = array_values( $this->queue );
+		$this->queue = array_unique($this->queue);
 		update_option( 'wootb_send_queue', $this->queue );
 	}
 
