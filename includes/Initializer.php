@@ -255,7 +255,10 @@ class Initializer extends Singleton {
 
 	public function get_queue() {
 		$this->queue = get_option( 'wootb_send_queue', [] );
-
+		if(!is_array($this->queue)) {
+			$this->queue = [];
+			$this->set_queue();
+		}
 		return $this->queue;
 	}
 
