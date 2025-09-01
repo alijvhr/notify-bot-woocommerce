@@ -1,6 +1,7 @@
 # Notify Bot for WooCommerce
 
 Telegram order management plugin for Woocommerce
+[PLUGIN HOME](https://wordpress.org/plugins/notify-bot-woocommerce/)
 
 ## Description
 
