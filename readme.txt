@@ -1,9 +1,9 @@
 == Notify Bot for WooCommerce ==
 Contributors: alijvhr
-Tags: telegram, notification, woocommerce notifier, woocommerce, تلگرام, نوتیفیکیشن, تلگرام, ووکامرس تلگرام
+Tags: telegram, notification, woocommerce notifier, woocommerce
 Requires at least: 6.7
 Tested up to: 6.8.2
-Stable tag: 2.5.0
+Stable tag: 2.5.1
 WC requires at least: 7.5.1
 WC tested up to: 10.1.2
 License: MIT
