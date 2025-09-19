@@ -14,7 +14,7 @@
  * Plugin URI: https://wordpress.org/plugins/notify-bot-woocommerce/
  * Description: Receive order details and manage them using your telegram
  * Author: Ali Javaheri
- * Version: 2.5.1
+ * Version: 2.5.2
  * Author URI: https://alijvhr.com
  * Requires at least: 6.7
  * Requires Plugins: woocommerce
@@ -37,7 +37,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'WOOTB_PLUGIN_VERSION', '2.5.1' );
+define( 'WOOTB_PLUGIN_VERSION', '2.5.2' );
 
 function wootb_auto_loader( $class ) {
 	if ( preg_match( "/^WOOTB(.*)$/", $class, $matches ) ) {

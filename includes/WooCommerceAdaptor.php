@@ -26,6 +26,9 @@ class WooCommerceAdaptor {
 		}
 		$detail = apply_filters( 'wootb_message_interpolate', $detail, $this->order_id );
 		foreach ( $detail as $key => $val ) {
+			if ( ! is_string( $val ) && ! is_numeric( $val ) ) {
+				$val = wp_json_encode( $val );
+			}
 			$message = str_replace( '{' . $key . '}', $val, $message );
 		}
 		$message = preg_replace( $this->pattern, '', $message );
@@ -70,7 +73,7 @@ class WooCommerceAdaptor {
 		$create_date                       = $this->order->get_date_created();
 		$date                              = $create_date ?? $this->order->get_date_modified();
 		$meta_data                         = $this->order->get_meta_data();
-		$replace['shop.url']               = get_option( 'siteurl', sanitize_text_field( $_SERVER['HTTP_HOST'] ) );
+		$replace['shop.url']               = get_option( 'siteurl' ) ?: sanitize_text_field( $_SERVER['HTTP_HOST'] );
 		$replace['shop.name']              = get_option( 'blogname', "blog" );
 		$replace['shop.tag']               = preg_replace( '/\W/', '', get_option( 'blogname', "blog" ) );
 		$replace['customer.id']            = $this->order->get_user_id();

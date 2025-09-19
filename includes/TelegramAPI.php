@@ -59,7 +59,7 @@ class TelegramAPI extends Singleton {
 				$order = new \WC_Order( $data->oid );
 				$order->update_status( $stats[ $data->st ] );
 				$notif = 'status changed successfully...';
-				Initializer::getInstance()->sendUpdateToBot( $order->get_id() );
+				Initializer::getInstance()->sendUpdateToBot( $order );
 				break;
 		}
 		$this->adaptor->callback( $object->callback_query->id, $notif );

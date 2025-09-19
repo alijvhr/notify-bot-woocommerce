@@ -191,6 +191,7 @@ class Initializer extends Singleton {
 	}
 
 	public function woocommerce_new_order( $order_id ) {
+		error_log( $order_id );
 		$this->addToUpdateQueue( $order_id );
 //		ob_flush();
 //		flush();
@@ -242,7 +243,12 @@ class Initializer extends Singleton {
 		$chatCount = count( $chatIds );
 		set_transient( 'wootb_queue_running', time(), WOOTB_QUEUE_CRON_INTERVAL * MINUTE_IN_SECONDS - 30 );
 		foreach ( $queue as $key => $order_id ) {
-			$sentCount = count( $this->sendUpdateToBot( $order_id ) );
+			$order = wc_get_order( $order_id );
+			if ( $order ) {
+				$sentCount = count( $this->sendUpdateToBot( $order ) );
+			} else {
+				$sentCount = $chatCount;
+			}
 			if ( $chatCount <= $sentCount ) {
 				unset( $queue[ $key ] );
 			}
@@ -255,20 +261,21 @@ class Initializer extends Singleton {
 
 	public function get_queue() {
 		$this->queue = get_option( 'wootb_send_queue', [] );
-		if(!is_array($this->queue)) {
+		if ( ! is_array( $this->queue ) ) {
 			$this->queue = [];
 			$this->set_queue();
 		}
+
 		return $this->queue;
 	}
 
 	public function set_queue() {
-		$this->queue = array_unique($this->queue);
+		$this->queue = array_unique( $this->queue );
 		update_option( 'wootb_send_queue', $this->queue );
 	}
 
-	public function sendUpdateToBot( $order_id ) {
-		$wc   = new WooCommerceAdaptor( $order_id );
+	public function sendUpdateToBot( \WC_Order $order ) {
+		$wc   = new WooCommerceAdaptor( $order->get_id() );
 		$text = $wc->interpolate( self::getTemplate() );
 
 		$messageIds = json_decode( $wc->order->get_meta( 'WooTelegramMessageIds' ) ?: "[]", true );
@@ -293,7 +300,7 @@ class Initializer extends Singleton {
 					if ( $status !== 'processing' ) {
 						$keyboard->add_inline_callback_button( '🕙 ' . __( 'Process', 'notify-bot-woocommerce' ), [
 							"cmd" => "status",
-							"oid" => $order_id,
+							"oid" => $order->get_id(),
 							"st"  => 2
 						] );
 					}
@@ -301,21 +308,21 @@ class Initializer extends Singleton {
 						if ( $status_buttons[ $status ] & self::STATUS_CANCEL ) {
 							$keyboard->add_inline_callback_button( '❌ ' . __( 'Cancel', 'notify-bot-woocommerce' ), [
 								"cmd" => "status",
-								"oid" => $order_id,
+								"oid" => $order->get_id(),
 								"st"  => 3
 							] );
 						}
 						if ( $status_buttons[ $status ] & self::STATUS_REFUND ) {
 							$keyboard->add_inline_callback_button( '💸 ' . __( 'Refund', 'notify-bot-woocommerce' ), [
 								"cmd" => "status",
-								"oid" => $order_id,
+								"oid" => $order->get_id(),
 								"st"  => 1
 							] );
 						}
 						if ( $status_buttons[ $status ] & self::STATUS_COMPLETE ) {
 							$keyboard->add_inline_callback_button( '✅ ' . __( 'Complete', 'notify-bot-woocommerce' ), [
 								"cmd" => "status",
-								"oid" => $order_id,
+								"oid" => $order->get_id(),
 								"st"  => 0
 							] );
 						}
